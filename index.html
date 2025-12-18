@@ -258,109 +258,131 @@
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN FIREBASE ---
+        // ==========================================
+        // 1. PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
+        // ==========================================
         const firebaseConfig = {
-             apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
-             authDomain: "ja-chat-59c9e.firebaseapp.com",
-             projectId: "ja-chat-59c9e",
-             storageBucket: "ja-chat-59c9e.firebasestorage.app",
-             messagingSenderId: "967850675224",
-             appId: "1:967850675224:web:809c09d0a3aa117696076d"
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "NUMEROS...",
+            appId: "APP_ID..."
         };
-        
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app(); 
+        }
         const db = firebase.firestore();
 
-        // --- 2. VARIABLES GLOBALES ---
-        let currentUser = null; // { name, avatar }
-        
-        // Elementos DOM
+        // Variables
+        let currentUser = null; 
         const authScreen = document.getElementById('auth-screen');
         const chatScreen = document.getElementById('chat-screen');
         const errorMsg = document.getElementById('auth-error');
         const msgList = document.getElementById('messages-list');
         const msgInput = document.getElementById('msg-input');
 
-        // --- 3. SISTEMA DE USUARIOS (AUTH SIMULADA EN FIRESTORE) ---
-        
-        // Función: Registrar
+        // ==========================================
+        // FUNCIONES DE REGISTRO Y LOGIN (MEJORADAS)
+        // ==========================================
+
+        // REGISTRAR USUARIO
         document.getElementById('btn-do-register').addEventListener('click', async () => {
-            const user = document.getElementById('reg-user').value.trim().toLowerCase(); // Usar minúsculas para ID
+            const user = document.getElementById('reg-user').value.trim().toLowerCase();
             const pass = document.getElementById('reg-pass').value.trim();
             const avatarSrc = document.getElementById('reg-avatar-img').src;
             
-            if(!user || !pass) return showError("Falta usuario o contraseña");
+            if(!user || !pass) return alert("¡Error! Escribe un usuario y contraseña.");
             
-            // 1. Verificar si existe
-            const docRef = db.collection("users").doc(user);
-            const docSnap = await docRef.get();
-            
-            if (docSnap.exists) {
-                return showError("Este usuario ya existe. Intenta iniciar sesión.");
+            try {
+                // Verificar si existe
+                const docRef = db.collection("users").doc(user);
+                const docSnap = await docRef.get();
+                
+                if (docSnap.exists) {
+                    return alert("¡Ese usuario YA EXISTE! Intenta con otro o inicia sesión.");
+                }
+
+                // Definir Avatar
+                const avatarToSave = (document.getElementById('reg-avatar-img').style.display !== 'none') 
+                                     ? avatarSrc 
+                                     : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
+                // Crear usuario en base de datos
+                await db.collection("users").doc(user).set({
+                    password: pass,
+                    avatar: avatarToSave,
+                    originalName: document.getElementById('reg-user').value
+                });
+
+                alert("¡Cuenta creada con éxito!");
+                loginSuccess(document.getElementById('reg-user').value, avatarToSave);
+
+            } catch (error) {
+                console.error(error);
+                alert("ERROR DE FIREBASE:\n" + error.message + "\n\n(Revisa que tu Base de Datos esté en MODO DE PRUEBA)");
             }
-
-            // 2. Crear usuario
-            const avatarToSave = (document.getElementById('reg-avatar-img').style.display !== 'none') 
-                                 ? avatarSrc 
-                                 : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
-
-            await db.collection("users").doc(user).set({
-                password: pass,
-                avatar: avatarToSave,
-                originalName: document.getElementById('reg-user').value // Guardar nombre con mayúsculas originales
-            });
-
-            loginSuccess(document.getElementById('reg-user').value, avatarToSave);
         });
 
-        // Función: Login
+        // INICIAR SESIÓN
         document.getElementById('btn-do-login').addEventListener('click', async () => {
             const user = document.getElementById('login-user').value.trim().toLowerCase();
             const pass = document.getElementById('login-pass').value.trim();
 
-            if(!user || !pass) return showError("Completa los campos");
+            if(!user || !pass) return alert("Completa los campos.");
 
-            const docRef = db.collection("users").doc(user);
-            const docSnap = await docRef.get();
+            try {
+                const docRef = db.collection("users").doc(user);
+                const docSnap = await docRef.get();
 
-            if (!docSnap.exists) {
-                return showError("Usuario no encontrado.");
-            }
+                if (!docSnap.exists) {
+                    return alert("Usuario NO encontrado. Regístrate primero.");
+                }
 
-            const data = docSnap.data();
-            if (data.password === pass) {
-                loginSuccess(data.originalName, data.avatar);
-            } else {
-                showError("Contraseña incorrecta.");
+                const data = docSnap.data();
+                if (data.password === pass) {
+                    loginSuccess(data.originalName, data.avatar);
+                } else {
+                    alert("Contraseña INCORRECTA.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error al conectar: " + error.message);
             }
         });
 
+        // AL ENTRAR CORRECTAMENTE
         function loginSuccess(name, avatar) {
             currentUser = { name: name, avatar: avatar };
-            // Guardar sesión simple en local
             localStorage.setItem('redchat_user', name);
             localStorage.setItem('redchat_avatar', avatar);
             
-            // UI
             document.getElementById('my-avatar-display').src = avatar;
             authScreen.classList.add('hidden');
             chatScreen.classList.remove('hidden');
             loadMessages();
         }
 
-        function logout() {
+        // CERRAR SESIÓN
+        window.logout = function() {
             localStorage.clear();
             location.reload();
         }
 
-        // Auto-Login si ya entró antes
+        // AUTO-LOGIN AL RECARGAR
         window.onload = () => {
             const u = localStorage.getItem('redchat_user');
             const a = localStorage.getItem('redchat_avatar');
             if(u && a) loginSuccess(u, a);
         };
 
-        // --- 4. LÓGICA DE CHAT ---
+        // ==========================================
+        // LÓGICA DEL CHAT
+        // ==========================================
         function sendMsg(img = null) {
             const txt = msgInput.value.trim();
             if (!txt && !img) return;
@@ -371,12 +393,12 @@
                 text: txt,
                 image: img,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }).catch(e => console.error("Error enviando mensaje", e));
+
             msgInput.value = "";
             document.getElementById('emoji-picker').classList.add('hidden');
         }
         
-        // Enviar con Enter
         msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
 
         function loadMessages() {
@@ -403,35 +425,23 @@
                     `;
                     msgList.appendChild(row);
                 });
-                // Auto scroll inteligente
                 msgList.scrollTop = msgList.scrollHeight;
             });
         }
 
         window.delMsg = (id) => { if(confirm("¿Borrar mensaje?")) db.collection("messages").doc(id).delete(); };
         window.clearChat = async () => {
-            if(confirm("⚠ ¿BORRAR TODO PARA SIEMPRE?")) {
+            if(confirm("⚠ ¿BORRAR TODO EL CHAT?")) {
                 const q = await db.collection("messages").get();
                 q.forEach(d => d.ref.delete());
             }
         };
 
-        // --- 5. EXTRAS (Avatar, Draw, Emojis) ---
+        // ==========================================
+        // EXTRAS (IMAGENES, EMOJIS, DIBUJO)
+        // ==========================================
         
-        // Subida Avatar
-        document.getElementById('reg-avatar-input').addEventListener('change', function() {
-            compress(this.files[0], (b64) => {
-                const img = document.getElementById('reg-avatar-img');
-                img.src = b64; img.style.display = 'block';
-                document.getElementById('reg-avatar-icon').style.display = 'none';
-            });
-        });
-
-        // Subida Imagen Chat
-        document.getElementById('img-input').addEventListener('change', function() {
-            compress(this.files[0], (b64) => sendMsg(b64));
-        });
-
+        // Comprimir Imagen
         function compress(file, cb) {
             if(!file) return;
             const r = new FileReader();
@@ -450,8 +460,20 @@
             r.readAsDataURL(file);
         }
 
-        // Helpers UI
-        function toggleAuth(view) {
+        // Listeners Imagen
+        document.getElementById('reg-avatar-input').addEventListener('change', function() {
+            compress(this.files[0], (b64) => {
+                const img = document.getElementById('reg-avatar-img');
+                img.src = b64; img.style.display = 'block';
+                document.getElementById('reg-avatar-icon').style.display = 'none';
+            });
+        });
+        document.getElementById('img-input').addEventListener('change', function() {
+            compress(this.files[0], (b64) => sendMsg(b64));
+        });
+
+        // UI Helpers
+        window.toggleAuth = (view) => {
             document.getElementById('auth-error').innerText = "";
             if(view === 'login') {
                 document.getElementById('register-view').classList.add('hidden');
@@ -460,8 +482,7 @@
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('register-view').classList.remove('hidden');
             }
-        }
-        function showError(t) { errorMsg.innerText = t; setTimeout(()=>errorMsg.innerText="", 3000); }
+        };
 
         // Emojis
         const em = ["😀","😂","😍","😎","😭","😡","👍","👎","🔥","❤️","🎉","💩","👻","👀","👋","💀"];
@@ -473,24 +494,21 @@
         });
         window.toggleEmoji = () => ep.classList.toggle('hidden');
 
-        // Canvas / Dibujo
+        // Canvas
         const cvs = document.getElementById('canvas');
         const ctx = cvs.getContext('2d');
         let isD = false;
-
         function resizeCvs() {
             const b = document.getElementById('canvas-box');
             cvs.width = b.offsetWidth; cvs.height = b.offsetHeight;
             ctx.fillStyle='white'; ctx.fillRect(0,0,cvs.width,cvs.height);
             ctx.lineJoin='round'; ctx.lineCap='round'; ctx.lineWidth=4;
         }
-
         window.openDraw = () => { document.getElementById('draw-screen').classList.remove('hidden'); resizeCvs(); };
         window.closeDraw = () => document.getElementById('draw-screen').classList.add('hidden');
         window.clearCanvas = () => { ctx.fillRect(0,0,cvs.width,cvs.height); };
         window.sendDraw = () => { sendMsg(cvs.toDataURL()); closeDraw(); };
-
-        // Eventos Dibujo (Mouse/Touch)
+        
         function getPos(e) {
             const r = cvs.getBoundingClientRect();
             const t = e.touches ? e.touches[0] : e;
