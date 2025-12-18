@@ -2,26 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red Dark Chat - Pro</title>
-    <!-- Fuente Google -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Red Dark Chat - Artist</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Compat) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        /* --- 1. ESTÉTICA Y FONDO DE CALIDAD --- */
+        /* --- ESTILOS GENERALES --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
         
         body {
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            /* Fondo Degradado de Calidad (Radial Mesh) */
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
             background-color: #050505;
             background-image: 
                 radial-gradient(at 0% 0%, hsla(350,90%,30%,1) 0, transparent 50%), 
@@ -29,88 +24,58 @@
                 radial-gradient(at 100% 100%, hsla(350,90%,20%,1) 0, transparent 50%), 
                 radial-gradient(at 0% 100%, hsla(0,0%,10%,1) 0, transparent 50%);
             color: white;
+            /* Prevenir scroll rebote en móviles */
+            overscroll-behavior: none;
         }
 
-        /* Contenedor Principal */
         .app-container {
-            width: 100%;
-            max-width: 420px;
-            height: 95vh;
-            background: rgba(30, 30, 35, 0.85);
-            backdrop-filter: blur(15px);
-            border-radius: 35px;
-            border: 1px solid rgba(255,255,255,0.1);
+            width: 100%; max-width: 420px; height: 95vh;
+            background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(15px);
+            border-radius: 35px; border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        /* --- PANTALLA DE LOGIN --- */
-        #login-screen {
+        /* --- PANTALLAS (LOGIN / WELCOME) --- */
+        .screen {
             position: absolute; width: 100%; height: 100%;
-            background: #121212;
+            background: #121212; z-index: 20; padding: 30px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 20; padding: 30px; text-align: center;
-            transition: opacity 0.5s ease;
+            text-align: center; transition: opacity 0.5s ease;
         }
-
+        
         .avatar-preview {
-            width: 100px; height: 100px;
-            border-radius: 50%;
-            background: #252525;
-            border: 2px dashed #ff4b5c;
-            margin-bottom: 20px;
-            overflow: hidden;
+            width: 100px; height: 100px; border-radius: 50%;
+            background: #252525; border: 2px dashed #ff4b5c;
+            margin-bottom: 20px; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
-            position: relative;
-            cursor: pointer;
+            position: relative; cursor: pointer;
         }
-        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
-        .avatar-preview span { font-size: 30px; opacity: 0.5; }
-        .avatar-preview:hover { background: #333; }
-
-        input[type="file"] { display: none; }
-
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        
         .input-dark {
             width: 100%; padding: 15px; border-radius: 12px;
             border: 1px solid #333; background: #1e1e1e;
             color: white; margin-bottom: 15px; outline: none;
-            transition: 0.3s;
         }
-        .input-dark:focus { border-color: #ff4b5c; box-shadow: 0 0 10px rgba(255, 75, 92, 0.2); }
-
         .btn-main {
             width: 100%; padding: 15px; border-radius: 12px; border: none;
             background: linear-gradient(135deg, #ff4b5c, #d63031);
-            color: white; font-weight: 600; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
-            transition: transform 0.2s;
+            color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px;
         }
-        .btn-main:active { transform: scale(0.97); }
+        .btn-sec { background: transparent; border: 1px solid #444; color: #aaa; }
 
-        /* --- PANTALLA CHAT --- */
+        /* --- CHAT HEADER --- */
         .chat-header {
-            padding: 15px 20px;
-            background: rgba(20, 20, 20, 0.9);
-            border-bottom: 1px solid #333;
-            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 20px; background: rgba(20, 20, 20, 0.9);
+            border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between;
         }
-
-        .header-controls {
-            display: flex; align-items: center; gap: 15px;
-        }
-
-        /* Botón de Borrar TODO (Header) */
-        .btn-clear-all {
-            background: transparent; border: none; font-size: 18px; cursor: pointer;
-            color: #d63031; opacity: 0.7; transition: 0.3s;
-        }
-        .btn-clear-all:hover { opacity: 1; transform: scale(1.1); text-shadow: 0 0 8px red; }
-
+        .header-controls { display: flex; gap: 15px; align-items: center; }
+        .icon-btn { background: none; border: none; font-size: 18px; cursor: pointer; transition: transform 0.2s; }
+        .icon-btn:hover { transform: scale(1.2); }
         .my-mini-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #ff4b5c; }
 
+        /* --- CHAT LIST --- */
         #messages-list {
             flex: 1; padding: 20px; overflow-y: auto;
             display: flex; flex-direction: column; gap: 12px;
@@ -118,55 +83,82 @@
         #messages-list::-webkit-scrollbar { width: 4px; }
         #messages-list::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
 
-        .msg-row { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        .msg-row { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; }
         .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
         
         .bubble {
-            padding: 10px 14px; border-radius: 18px;
-            font-size: 13px; line-height: 1.4; position: relative;
-            word-wrap: break-word;
+            padding: 10px 14px; border-radius: 18px; font-size: 13px;
+            line-height: 1.4; position: relative; word-wrap: break-word;
+        }
+        .chat-image-content {
+            max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; background: white;
         }
 
         .sent { flex-direction: row-reverse; align-self: flex-end; }
-        .sent .bubble {
-            background: linear-gradient(135deg, #ff4b5c, #e84118);
-            color: white; border-bottom-right-radius: 2px;
-        }
-        
+        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; }
-        .received .bubble {
-            background: #2d3436; color: #dfe6e9;
-            border-bottom-left-radius: 2px;
-        }
-        .user-name { font-size: 10px; opacity: 0.6; margin-bottom: 2px; display: block; }
-
-        /* Botón de Borrar Individual */
+        .received .bubble { background: #2d3436; color: #dfe6e9; border-bottom-left-radius: 2px; }
+        
         .delete-btn {
-            position: absolute; top: -8px; left: -8px;
-            width: 20px; height: 20px; background: #fff;
-            color: #d63031; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; font-size: 12px; border: 1px solid #ddd;
-            display: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: absolute; top: -8px; left: -8px; width: 20px; height: 20px;
+            background: #fff; color: #d63031; border-radius: 50%;
+            display: none; justify-content: center; align-items: center; cursor: pointer; font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 5;
         }
         .sent:hover .delete-btn { display: flex; }
 
+        /* --- INPUT AREA --- */
         .chat-input-area {
-            padding: 15px; background: rgba(20, 20, 20, 0.9);
-            display: flex; gap: 10px; align-items: center;
+            padding: 10px 15px; background: rgba(20, 20, 20, 0.9);
+            display: flex; gap: 8px; align-items: center; position: relative;
         }
-        .chat-input-area input {
-            flex: 1; padding: 12px; border-radius: 25px;
-            border: none; background: #2d3436; color: white; outline: none;
+        .chat-input-area input[type="text"] {
+            flex: 1; padding: 12px; border-radius: 25px; border: none;
+            background: #2d3436; color: white; outline: none;
         }
+        .tool-btn { font-size: 20px; background: none; border: none; cursor: pointer; color: #aaa; padding: 5px; }
+        .tool-btn:hover { color: #fff; transform: scale(1.1); }
         .send-btn {
             width: 40px; height: 40px; border-radius: 50%; border: none;
             background: #ff4b5c; color: white; cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
         }
+
+        /* EMOJI PICKER */
+        .emoji-picker {
+            position: absolute; bottom: 70px; left: 10px;
+            background: #2d3436; padding: 10px; border-radius: 15px;
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10;
+        }
+        .emoji-btn { font-size: 20px; cursor: pointer; padding: 5px; border-radius: 5px; }
+        .emoji-btn:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- NUEVO: MODAL DE DIBUJO --- */
+        .drawing-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #121212; z-index: 50; display: flex; flex-direction: column;
+            padding: 10px;
+        }
+        
+        .canvas-container {
+            flex: 1; background: white; /* HOJA BLANCA */
+            border-radius: 15px; margin: 10px 0;
+            overflow: hidden; position: relative;
+            touch-action: none; /* Importante para dibujar en móvil */
+            cursor: crosshair;
+        }
+        
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .draw-controls {
+            display: flex; justify-content: space-between; gap: 10px; padding-bottom: 10px;
+        }
+        .btn-draw-action {
+            flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;
+        }
+        .btn-cancel { background: #333; color: white; }
+        .btn-clear { background: #ff9f43; color: white; }
+        .btn-send-draw { background: #ff4b5c; color: white; }
 
         .hidden { display: none !important; }
     </style>
@@ -175,47 +167,78 @@
 
     <div class="app-container">
         
-        <!-- LOGIN -->
-        <div id="login-screen">
+        <!-- LOGIN SCREEN -->
+        <div id="login-screen" class="screen">
             <h2 style="color:#ff4b5c; margin-bottom:5px;">RED CHAT</h2>
-            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Sube tu foto y únete</p>
+            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Crea tu perfil</p>
 
-            <label for="fileInput" class="avatar-preview">
-                <img id="avatarPreviewImg" src="" alt="">
-                <span id="avatarIcon">📷</span>
+            <label for="fileInputAvatar" class="avatar-preview">
+                <img id="avatarPreviewImg" src="" style="display:none">
+                <span id="avatarIcon" style="font-size:30px; opacity:0.5;">📷</span>
             </label>
-            <input type="file" id="fileInput" accept="image/*">
+            <input type="file" id="fileInputAvatar" accept="image/*" style="display:none">
 
-            <input type="text" id="usernameInput" class="input-dark" placeholder="Tu Apodo / Nickname" autocomplete="off">
+            <input type="text" id="usernameInput" class="input-dark" placeholder="Tu Apodo" autocomplete="off">
             <button id="btnLogin" class="btn-main">ENTRAR</button>
         </div>
 
-        <!-- CHAT -->
+        <!-- WELCOME SCREEN -->
+        <div id="welcome-screen" class="screen hidden">
+            <div style="width:80px; height:80px; border-radius:50%; overflow:hidden; border:2px solid #ff4b5c; margin-bottom:15px;">
+                <img id="welcomeAvatar" src="" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <h3 style="margin-bottom:5px;">Hola, <span id="welcomeName" style="color:#ff4b5c">User</span></h3>
+            <p style="font-size:12px; color:#aaa; margin-bottom:30px;">¿Quieres continuar?</p>
+            <button id="btnContinue" class="btn-main">CONTINUAR</button>
+            <button id="btnSwitch" class="btn-main btn-sec">USAR OTRA CUENTA</button>
+        </div>
+
+        <!-- CHAT SCREEN -->
         <div id="chat-screen" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
             <header class="chat-header">
                 <span style="font-weight:600; font-size:14px;">Sala Principal</span>
-                
-                <!-- Controles: Borrar todo y Avatar -->
                 <div class="header-controls">
-                    <!-- Botón NUEVO para vaciar el chat -->
-                    <button id="btnClearAll" class="btn-clear-all" title="Vaciar chat para TODOS">🗑️</button>
-                    <img id="headerAvatar" class="my-mini-avatar" src="" alt="">
+                    <button id="btnClearAll" class="icon-btn" title="Borrar Chat">🗑️</button>
+                    <button id="btnLogout" class="icon-btn" title="Salir">🚪</button>
+                    <img id="headerAvatar" class="my-mini-avatar" src="">
                 </div>
             </header>
 
             <div id="messages-list"></div>
+            
+            <div id="emojiPicker" class="emoji-picker hidden"></div>
 
-            <form id="message-form" class="chat-input-area">
-                <input type="text" id="messageInput" placeholder="Escribe algo..." autocomplete="off">
-                <button type="submit" class="send-btn">➤</button>
-            </form>
+            <div class="chat-input-area">
+                <button id="btnEmojiToggle" class="tool-btn">😀</button>
+                <button id="btnImgUpload" class="tool-btn">📷</button>
+                <button id="btnOpenDraw" class="tool-btn">🖌️</button> <!-- NUEVO BOTON PINCEL -->
+                
+                <input type="file" id="chatFileInput" accept="image/*" style="display:none">
+                <input type="text" id="messageInput" placeholder="Mensaje..." autocomplete="off">
+                <button id="btnSend" class="send-btn">➤</button>
+            </div>
+        </div>
+
+        <!-- NUEVO: PANTALLA DE DIBUJO (MODAL) -->
+        <div id="drawing-modal" class="drawing-modal hidden">
+            <h3 style="color:white; text-align:center; font-size:14px; margin-top:10px;">Dibuja algo</h3>
+            
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="drawCanvas"></canvas>
+            </div>
+            
+            <div class="draw-controls">
+                <button id="btnCancelDraw" class="btn-draw-action btn-cancel">Cancelar</button>
+                <button id="btnClearDraw" class="btn-draw-action btn-clear">Limpiar</button>
+                <button id="btnSendDraw" class="btn-draw-action btn-send-draw">Enviar</button>
+            </div>
         </div>
 
     </div>
 
     <script>
         // ==========================================
-        // 1. CONFIGURACIÓN FIREBASE (REEMPLAZAR AQUI)
+        // 1. FIREBASE CONFIG (¡PONER TUS DATOS!)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
@@ -226,139 +249,241 @@
             appId: "1:967850675224:web:809c09d0a3aa117696076d"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         // ==========================================
-        // 2. LÓGICA DE LA APP
+        // 2. LÓGICA PRINCIPAL
         // ==========================================
-        
         let currentUser = "";
-        let currentAvatarBase64 = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
+        let currentAvatar = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
 
-        const loginScreen = document.getElementById('login-screen');
-        const chatScreen = document.getElementById('chat-screen');
-        const usernameInput = document.getElementById('usernameInput');
-        const fileInput = document.getElementById('fileInput');
-        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
-        const avatarIcon = document.getElementById('avatarIcon');
-        const btnClearAll = document.getElementById('btnClearAll'); // Nuevo botón
-        
-        // --- PROCESAR IMAGEN ---
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(readerEvent) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const MAX_SIZE = 150;
-                        let width = img.width;
-                        let height = img.height;
-                        if (width > height) {
-                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                        } else {
-                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        ctx.drawImage(img, 0, 0, width, height);
-                        currentAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                        avatarPreviewImg.src = currentAvatarBase64;
-                        avatarPreviewImg.style.display = 'block';
-                        avatarIcon.style.display = 'none';
-                    }
-                    img.src = readerEvent.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
+        const screens = {
+            login: document.getElementById('login-screen'),
+            welcome: document.getElementById('welcome-screen'),
+            chat: document.getElementById('chat-screen'),
+            draw: document.getElementById('drawing-modal') // Nuevo Modal
+        };
+        const inputs = {
+            user: document.getElementById('usernameInput'),
+            msg: document.getElementById('messageInput'),
+            fileAvatar: document.getElementById('fileInputAvatar'),
+            fileChat: document.getElementById('chatFileInput')
+        };
+        const emojiPicker = document.getElementById('emojiPicker');
 
-        // --- ENTRAR ---
-        document.getElementById('btnLogin').addEventListener('click', () => {
-            const name = usernameInput.value.trim();
-            if(!name) return alert("Escribe un nombre");
-            currentUser = name;
-            document.getElementById('headerAvatar').src = currentAvatarBase64;
-            loginScreen.classList.add('hidden');
-            chatScreen.classList.remove('hidden');
-            setupChat();
-        });
-
-        // --- ENVIAR ---
-        document.getElementById('message-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = document.getElementById('messageInput').value.trim();
-            if(text) {
-                db.collection("messages").add({
-                    user: currentUser,
-                    avatar: currentAvatarBase64,
-                    text: text,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                document.getElementById('messageInput').value = "";
-            }
-        });
-
-        // --- RENDERIZAR CHAT ---
-        function setupChat() {
-            db.collection("messages").orderBy("timestamp", "asc")
-              .onSnapshot(snapshot => {
-                  const list = document.getElementById('messages-list');
-                  list.innerHTML = ""; 
-
-                  snapshot.forEach(doc => {
-                      const data = doc.data();
-                      const id = doc.id; 
-                      const isMe = data.user === currentUser;
-
-                      const row = document.createElement('div');
-                      row.className = `msg-row ${isMe ? 'sent' : 'received'}`;
-
-                      row.innerHTML = `
-                          ${!isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
-                          <div class="bubble">
-                              ${isMe ? `<div class="delete-btn" onclick="deleteMessage('${id}')">✕</div>` : ''}
-                              ${!isMe ? `<span class="user-name">${data.user}</span>` : ''}
-                              ${data.text}
-                          </div>
-                          ${isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
-                      `;
-                      list.appendChild(row);
-                  });
-                  list.scrollTop = list.scrollHeight;
-              });
-        }
-
-        // --- BORRAR 1 MENSAJE (INDIVIDUAL) ---
-        window.deleteMessage = function(docId) {
-            if(confirm("¿Borrar mensaje?")) {
-                db.collection("messages").doc(docId).delete()
-                    .catch(error => console.error("Error borrando:", error));
+        // --- GESTIÓN DE SESIÓN ---
+        window.onload = () => {
+            const savedUser = localStorage.getItem('chat_user');
+            const savedAvatar = localStorage.getItem('chat_avatar');
+            if (savedUser) {
+                currentUser = savedUser;
+                currentAvatar = savedAvatar || currentAvatar;
+                document.getElementById('welcomeName').textContent = currentUser;
+                document.getElementById('welcomeAvatar').src = currentAvatar;
+                screens.login.classList.add('hidden');
+                screens.welcome.classList.remove('hidden');
             }
         };
 
-        // --- BORRAR TODO EL CHAT (GLOBAL) ---
-        btnClearAll.addEventListener('click', async () => {
-            const confirm1 = confirm("⚠ ¿ESTÁS SEGURO?\n\nEsto borrará TODA la conversación para TODOS los usuarios.");
-            if(confirm1) {
-                const confirm2 = confirm("¿De verdad? Esta acción no se puede deshacer.");
-                if(confirm2) {
-                    // Obtener todos los mensajes y borrarlos
-                    const snapshot = await db.collection("messages").get();
-                    if(snapshot.empty) {
-                        alert("El chat ya está vacío.");
-                        return;
-                    }
+        document.getElementById('btnContinue').addEventListener('click', enterChat);
+        document.getElementById('btnSwitch').addEventListener('click', () => {
+            localStorage.clear(); screens.welcome.classList.add('hidden'); screens.login.classList.remove('hidden');
+        });
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            if(confirm("¿Salir?")) location.reload();
+        });
+
+        // --- LOGIN ---
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            const name = inputs.user.value.trim();
+            if(!name) return alert("Falta nombre");
+            currentUser = name;
+            localStorage.setItem('chat_user', currentUser);
+            localStorage.setItem('chat_avatar', currentAvatar);
+            screens.login.classList.add('hidden');
+            enterChat();
+        });
+
+        function enterChat() {
+            document.getElementById('headerAvatar').src = currentAvatar;
+            screens.welcome.classList.add('hidden');
+            screens.chat.classList.remove('hidden');
+            loadMessages();
+        }
+
+        // --- IMÁGENES ---
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX = 400; 
+                    let w = img.width, h = img.height;
+                    if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
+                    else { if(h > MAX) { w *= MAX/h; h = MAX; } }
+                    canvas.width = w; canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        inputs.fileAvatar.addEventListener('change', (e) => {
+            if(e.target.files[0]) compressImage(e.target.files[0], (b64) => {
+                currentAvatar = b64;
+                document.getElementById('avatarPreviewImg').src = b64;
+                document.getElementById('avatarPreviewImg').style.display = 'block';
+                document.getElementById('avatarIcon').style.display = 'none';
+            });
+        });
+
+        document.getElementById('btnImgUpload').addEventListener('click', () => inputs.fileChat.click());
+        inputs.fileChat.addEventListener('change', (e) => {
+            if(e.target.files[0]) compressImage(e.target.files[0], (b64) => sendMessage(null, b64));
+        });
+
+        // --- EMOJIS ---
+        ["😀","😂","😍","😎","😭","😡","👍","👎","🎉","❤️","🔥","👻"].forEach(emo => {
+            const s = document.createElement('span'); s.textContent = emo; s.className = "emoji-btn";
+            s.onclick = () => { inputs.msg.value += emo; emojiPicker.classList.add('hidden'); };
+            emojiPicker.appendChild(s);
+        });
+        document.getElementById('btnEmojiToggle').addEventListener('click', () => emojiPicker.classList.toggle('hidden'));
+
+        // ==========================================
+        // 3. LÓGICA DE DIBUJO (CANVAS) - NUEVO
+        // ==========================================
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        // Abrir Modal
+        document.getElementById('btnOpenDraw').addEventListener('click', () => {
+            screens.draw.classList.remove('hidden');
+            // Ajustar tamaño del canvas al contenedor visible
+            const container = document.getElementById('canvasContainer');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            
+            // Configurar Pincel
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0, canvas.width, canvas.height); // Fondo blanco
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#000000'; // Color lápiz
+        });
+
+        // Cerrar Modal
+        document.getElementById('btnCancelDraw').addEventListener('click', () => screens.draw.classList.add('hidden'));
+        
+        // Limpiar
+        document.getElementById('btnClearDraw').addEventListener('click', () => {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+        });
+
+        // Enviar Dibujo
+        document.getElementById('btnSendDraw').addEventListener('click', () => {
+            const drawingUrl = canvas.toDataURL('image/png');
+            sendMessage(null, drawingUrl);
+            screens.draw.classList.add('hidden');
+        });
+
+        // Eventos Mouse
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+
+        // Eventos Touch (Móvil)
+        function getTouchPos(canvasDom, touchEvent) {
+            var rect = canvasDom.getBoundingClientRect();
+            return {
+                x: touchEvent.touches[0].clientX - rect.left,
+                y: touchEvent.touches[0].clientY - rect.top
+            };
+        }
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); isDrawing = true;
+            const pos = getTouchPos(canvas, e);
+            [lastX, lastY] = [pos.x, pos.y];
+        }, {passive: false});
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); if(!isDrawing) return;
+            const pos = getTouchPos(canvas, e);
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+            [lastX, lastY] = [pos.x, pos.y];
+        }, {passive: false});
+        
+        canvas.addEventListener('touchend', () => isDrawing = false);
+
+        // ==========================================
+        // 4. CHAT CORE
+        // ==========================================
+        document.getElementById('btnSend').addEventListener('click', () => {
+            const txt = inputs.msg.value.trim();
+            if(txt) sendMessage(txt, null);
+        });
+
+        function sendMessage(text, imgBase64) {
+            db.collection("messages").add({
+                user: currentUser, avatar: currentAvatar,
+                text: text || "", image: imgBase64 || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            inputs.msg.value = ""; emojiPicker.classList.add('hidden');
+        }
+
+        function loadMessages() {
+            db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snap => {
+                const list = document.getElementById('messages-list');
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const isMe = data.user === currentUser;
+                    const row = document.createElement('div');
+                    row.className = `msg-row ${isMe ? 'sent' : 'received'}`;
                     
-                    snapshot.forEach(doc => {
-                        db.collection("messages").doc(doc.id).delete();
-                    });
-                }
+                    let content = "";
+                    if(data.image) content += `<img src="${data.image}" class="chat-image-content">`;
+                    if(data.text) content += `<div style="margin-top:4px">${data.text}</div>`;
+
+                    row.innerHTML = `
+                        ${!isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
+                        <div class="bubble">
+                            ${isMe ? `<div class="delete-btn" onclick="deleteMsg('${doc.id}')">✕</div>` : ''}
+                            ${!isMe ? `<small style="opacity:0.6; font-size:10px; display:block">${data.user}</small>` : ''}
+                            ${content}
+                        </div>
+                        ${isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
+                    `;
+                    list.appendChild(row);
+                });
+                list.scrollTop = list.scrollHeight;
+            });
+        }
+
+        window.deleteMsg = (id) => { if(confirm("¿Borrar?")) db.collection("messages").doc(id).delete(); };
+        document.getElementById('btnClearAll').addEventListener('click', async () => {
+            if(confirm("⚠ ¿Borrar TODO el chat para TODOS?")) {
+                const snap = await db.collection("messages").get();
+                snap.forEach(doc => doc.ref.delete());
             }
         });
 
