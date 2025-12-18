@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <!-- VIEWPORT IMPORTANTE PARA MÓVILES: Evita zoom y ajusta al ancho real -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Red Dark Chat - Mobile</title>
+    <!-- META VIEWPORT OPTIMIZADO: "interactive-widget=resizes-content" es la clave para que el teclado no rompa el chat -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <title>Red Mesh Chat - Secure</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -12,163 +12,156 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        /* --- ESTILOS GENERALES --- */
+        /* --- 1. ESTRUCTURA INAMOVIBLE (LAYOUT) --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
-            /* Usamos 100dvh para móviles modernos, fallback a 100vh */
-            height: 100vh; height: 100dvh;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            /* Ocupar exactamente la pantalla visible, ni un pixel más */
+            height: 100vh; 
+            height: 100dvh; /* Altura dinámica para móviles modernos */
             background-color: #050505;
-            /* Fondo Mesh Rojo Oscuro */
             background-image: 
                 radial-gradient(at 0% 0%, hsla(350,90%,30%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 0%, hsla(0,0%,15%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 100%, hsla(350,90%,20%,1) 0, transparent 50%), 
                 radial-gradient(at 0% 100%, hsla(0,0%,10%,1) 0, transparent 50%);
-            color: white;
-            overscroll-behavior: none; /* Evita el rebote de scroll en iOS */
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden; /* Prohibido el scroll en el body */
         }
 
-        /* --- CONTENEDOR APP --- */
+        /* Contenedor Principal */
         .app-container {
-            width: 100%; max-width: 420px; height: 95vh;
-            background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(15px);
-            border-radius: 35px; border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            width: 100%; max-width: 450px; 
+            height: 100%; /* Full height en móvil */
+            background: rgba(20, 20, 25, 0.95); 
+            display: flex; flex-direction: column; /* Columna Flex es vital para el teclado */
+            position: relative;
+            overflow: hidden;
         }
 
-        /* --- RESPONSIVE: AJUSTES PARA CELULARES --- */
-        @media (max-width: 600px) {
+        /* En escritorio le damos borde y margen */
+        @media (min-width: 451px) {
             .app-container {
-                max-width: 100%;
-                height: 100%;       /* Ocupar toda la pantalla */
-                border-radius: 0;   /* Quitar bordes redondos externos */
-                border: none;
+                height: 90vh; border-radius: 30px;
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 30px 60px rgba(0,0,0,0.8);
             }
         }
 
-        /* --- PANTALLAS (LOGIN / WELCOME) --- */
+        /* --- 2. PANTALLAS (LOGIN / REGISTRO) --- */
         .screen {
             position: absolute; width: 100%; height: 100%;
-            background: #121212; z-index: 20; padding: 30px;
+            background: #121212; z-index: 50; padding: 30px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; transition: opacity 0.4s ease;
+            transition: transform 0.4s ease;
         }
         
         .avatar-preview {
-            width: 110px; height: 110px; border-radius: 50%;
-            background: #252525; border: 2px dashed #ff4b5c;
-            margin-bottom: 25px; overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-            position: relative; cursor: pointer;
+            width: 100px; height: 100px; border-radius: 50%;
+            background: #252525; border: 2px dashed #ff4b5c; margin-bottom: 20px;
+            display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
         }
         .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+        .input-group { width: 100%; margin-bottom: 15px; text-align: left; }
+        .label-text { font-size: 12px; color: #888; margin-left: 5px; margin-bottom: 5px; display: block; }
         
         .input-dark {
-            width: 100%; padding: 16px; border-radius: 15px;
-            border: 1px solid #333; background: #1e1e1e; font-size: 16px; /* Evita zoom en iOS */
-            color: white; margin-bottom: 15px; outline: none;
+            width: 100%; padding: 14px; border-radius: 12px;
+            border: 1px solid #333; background: #1e1e1e;
+            color: white; outline: none; font-size: 16px;
         }
+        .input-dark:focus { border-color: #ff4b5c; }
+
         .btn-main {
-            width: 100%; padding: 16px; border-radius: 15px; border: none;
-            background: linear-gradient(135deg, #ff4b5c, #d63031); font-size: 16px;
-            color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px;
-            box-shadow: 0 4px 15px rgba(255, 75, 92, 0.3);
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #ff4b5c, #d63031);
+            color: white; font-weight: 600; cursor: pointer; font-size: 16px; margin-top: 10px;
         }
-        .btn-sec { background: transparent; border: 1px solid #444; color: #aaa; box-shadow: none; }
+        .btn-link {
+            background: none; border: none; color: #ff4b5c; text-decoration: underline;
+            cursor: pointer; margin-top: 15px; font-size: 13px;
+        }
+        .error-msg { color: #ff4757; font-size: 12px; margin-top: 10px; height: 15px; }
 
-        /* --- CHAT HEADER --- */
+        /* --- 3. CHAT UI (Flexible) --- */
+        
+        /* Cabecera FIJA */
         .chat-header {
-            padding: 15px 15px; background: rgba(20, 20, 20, 0.95);
-            border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between;
-            flex-shrink: 0; /* No encoger header */
+            flex-shrink: 0; /* No se encoge nunca */
+            height: 60px; padding: 0 15px;
+            background: rgba(25, 25, 30, 0.98);
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        .header-controls { display: flex; gap: 12px; align-items: center; }
-        .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
-        .my-mini-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #ff4b5c; }
 
-        /* --- CHAT LIST --- */
+        /* Lista de Mensajes (SCROLLABLE) */
         #messages-list {
-            flex: 1; padding: 15px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 15px;
+            flex-grow: 1; /* Ocupa todo el espacio disponible */
+            overflow-y: auto; /* Solo esto hace scroll */
+            padding: 15px; display: flex; flex-direction: column; gap: 15px;
             scroll-behavior: smooth;
         }
-        
-        .msg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 88%; }
-        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+
+        /* Barra de Input FIJA abajo */
+        .chat-input-area {
+            flex-shrink: 0; /* No se encoge */
+            padding: 10px; background: rgba(25, 25, 30, 0.98); border-top: 1px solid #333;
+            display: flex; gap: 8px; align-items: center;
+            /* Soporte para iPhone X/11/12/etc home bar */
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+
+        /* Estilos de Mensajes */
+        .msg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 85%; }
+        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
         
         .bubble {
-            padding: 12px 16px; border-radius: 20px; font-size: 14px;
-            line-height: 1.4; position: relative; word-wrap: break-word;
+            padding: 10px 14px; border-radius: 18px; font-size: 14px;
+            line-height: 1.4; position: relative; word-wrap: break-word; color: #eee;
         }
-        .chat-image-content {
-            max-width: 100%; border-radius: 12px; margin-top: 6px; display: block; background: white;
-        }
-
         .sent { flex-direction: row-reverse; align-self: flex-end; }
-        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 4px; }
+        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; }
-        .received .bubble { background: #2d3436; color: #dfe6e9; border-bottom-left-radius: 4px; }
+        .received .bubble { background: #2d3436; border-bottom-left-radius: 2px; }
         
-        /* Botón borrar (Siempre visible en móvil si es touch, o hover en PC) */
+        .chat-image { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
+        
         .delete-btn {
-            position: absolute; top: -10px; left: -5px; width: 24px; height: 24px;
-            background: #fff; color: #d63031; border-radius: 50%;
-            display: none; justify-content: center; align-items: center; cursor: pointer; 
-            font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 5;
+            position: absolute; top: -10px; left: -10px; width: 22px; height: 22px;
+            background: white; color: red; border-radius: 50%; border: 1px solid #ccc;
+            display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 10;
         }
         .sent:hover .delete-btn { display: flex; }
-        /* En táctil a veces no hay hover, mostrar al tocar la burbuja se podría con JS, pero hover funciona en muchos */
 
-        /* --- INPUT AREA --- */
-        .chat-input-area {
-            padding: 10px; background: rgba(20, 20, 20, 0.95);
-            display: flex; gap: 6px; align-items: center; position: relative;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Ajuste iPhone X+ */
+        /* Inputs y Botones Chat */
+        .chat-input-area input {
+            flex: 1; padding: 12px 15px; border-radius: 25px; border: none;
+            background: #333; color: white; outline: none; font-size: 16px;
         }
-        .chat-input-area input[type="text"] {
-            flex: 1; padding: 14px; border-radius: 25px; border: none;
-            background: #2d3436; color: white; outline: none; font-size: 15px;
-        }
-        .tool-btn { font-size: 22px; background: none; border: none; cursor: pointer; color: #bbb; padding: 8px; }
+        .icon-btn { font-size: 22px; background: none; border: none; color: #aaa; cursor: pointer; padding: 5px; }
         .send-btn {
-            width: 44px; height: 44px; border-radius: 50%; border: none; flex-shrink: 0;
-            background: #ff4b5c; color: white; cursor: pointer; font-size: 18px;
-            display: flex; justify-content: center; align-items: center;
+            width: 45px; height: 45px; border-radius: 50%; background: #ff4b5c; color: white;
+            border: none; font-size: 18px; flex-shrink: 0; display:flex; align-items:center; justify-content:center;
         }
 
-        /* EMOJI PICKER RESPONSIVE */
+        /* --- 4. EXTRAS (Emoji & Draw) --- */
         .emoji-picker {
-            position: absolute; bottom: 80px; left: 10px; right: 10px; /* Ancho fluido */
-            background: #2d3436; padding: 10px; border-radius: 15px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.6); z-index: 10;
+            position: absolute; bottom: 70px; left: 0; width: 100%;
+            background: #252525; padding: 10px; border-top: 1px solid #444;
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; z-index: 20;
         }
-        .emoji-btn { font-size: 24px; cursor: pointer; padding: 8px; border-radius: 8px; text-align: center; }
+        .emoji-btn { font-size: 24px; text-align: center; padding: 5px; cursor: pointer; }
 
-        /* --- MODAL DE DIBUJO --- */
+        /* Modal Dibujo */
         .drawing-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #121212; z-index: 50; display: flex; flex-direction: column;
-            padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+            background: #121212; z-index: 100; display: flex; flex-direction: column; padding: 10px;
         }
-        
-        .canvas-container {
-            flex: 1; background: white; border-radius: 15px; margin: 10px 0;
-            overflow: hidden; position: relative; touch-action: none; cursor: crosshair;
-        }
-        canvas { display: block; width: 100%; height: 100%; }
-
-        .draw-controls { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; }
-        .btn-draw-action {
-            flex: 1; padding: 14px; border-radius: 12px; border: none; 
-            font-weight: 600; cursor: pointer; font-size: 14px;
-        }
-        .btn-cancel { background: #333; color: white; }
-        .btn-clear { background: #ff9f43; color: white; }
-        .btn-send-draw { background: #ff4b5c; color: white; }
+        .canvas-box { flex: 1; background: white; border-radius: 15px; margin: 10px 0; overflow: hidden; touch-action: none; }
+        canvas { width: 100%; height: 100%; display: block; }
+        .draw-footer { display: flex; gap: 10px; height: 50px; }
+        .draw-btn { flex: 1; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
 
         .hidden { display: none !important; }
     </style>
@@ -177,333 +170,339 @@
 
     <div class="app-container">
         
-        <!-- LOGIN SCREEN -->
-        <div id="login-screen" class="screen">
-            <h2 style="color:#ff4b5c; margin-bottom:5px; font-size: 28px;">RED CHAT</h2>
-            <p style="font-size:14px; color:#aaa; margin-bottom:30px;">Identifícate</p>
+        <!-- PANTALLA 1: FORMULARIO AUTH (LOGIN / REGISTER) -->
+        <div id="auth-screen" class="screen">
+            <h2 style="color:#ff4b5c; margin-bottom: 20px;">RED CHAT ID</h2>
+            
+            <!-- Vista Registro (Por defecto) -->
+            <div id="register-view" style="width: 100%; text-align: center;">
+                <label for="reg-avatar-input" class="avatar-preview">
+                    <img id="reg-avatar-img" style="display:none">
+                    <span id="reg-avatar-icon" style="font-size:30px; opacity:0.5;">📷</span>
+                </label>
+                <input type="file" id="reg-avatar-input" style="display:none" accept="image/*">
 
-            <label for="fileInputAvatar" class="avatar-preview">
-                <img id="avatarPreviewImg" src="" style="display:none">
-                <span id="avatarIcon" style="font-size:40px; opacity:0.5;">📷</span>
-            </label>
-            <input type="file" id="fileInputAvatar" accept="image/*" style="display:none">
-
-            <input type="text" id="usernameInput" class="input-dark" placeholder="Tu Apodo" autocomplete="off">
-            <button id="btnLogin" class="btn-main">ENTRAR</button>
-        </div>
-
-        <!-- WELCOME SCREEN -->
-        <div id="welcome-screen" class="screen hidden">
-            <div style="width:100px; height:100px; border-radius:50%; overflow:hidden; border:3px solid #ff4b5c; margin-bottom:20px;">
-                <img id="welcomeAvatar" src="" style="width:100%; height:100%; object-fit:cover;">
+                <div class="input-group">
+                    <span class="label-text">Elige tu Usuario</span>
+                    <input type="text" id="reg-user" class="input-dark" placeholder="Ej: Dragon123">
+                </div>
+                <div class="input-group">
+                    <span class="label-text">Crea una Contraseña</span>
+                    <input type="password" id="reg-pass" class="input-dark" placeholder="******">
+                </div>
+                <button id="btn-do-register" class="btn-main">CREAR CUENTA</button>
+                <button class="btn-link" onclick="toggleAuth('login')">¿Ya tienes cuenta? Inicia sesión</button>
             </div>
-            <h3 style="margin-bottom:5px; font-size: 22px;">Hola, <span id="welcomeName" style="color:#ff4b5c">User</span></h3>
-            <p style="font-size:14px; color:#aaa; margin-bottom:40px;">¿Regresas al chat?</p>
-            <button id="btnContinue" class="btn-main">CONTINUAR</button>
-            <button id="btnSwitch" class="btn-main btn-sec">CAMBIAR CUENTA</button>
+
+            <!-- Vista Login (Oculta) -->
+            <div id="login-view" style="width: 100%; text-align: center;" class="hidden">
+                <div style="margin-bottom: 30px; font-size: 50px;">🔒</div>
+                <div class="input-group">
+                    <span class="label-text">Tu Usuario</span>
+                    <input type="text" id="login-user" class="input-dark" placeholder="Usuario">
+                </div>
+                <div class="input-group">
+                    <span class="label-text">Tu Contraseña</span>
+                    <input type="password" id="login-pass" class="input-dark" placeholder="Contraseña">
+                </div>
+                <button id="btn-do-login" class="btn-main">ENTRAR</button>
+                <button class="btn-link" onclick="toggleAuth('register')">¿Eres nuevo? Regístrate aquí</button>
+            </div>
+
+            <div id="auth-error" class="error-msg"></div>
         </div>
 
-        <!-- CHAT SCREEN -->
+        <!-- PANTALLA 2: CHAT PRINCIPAL -->
         <div id="chat-screen" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
+            <!-- Header Fijo -->
             <header class="chat-header">
-                <span style="font-weight:600; font-size:16px;">Sala Principal</span>
-                <div class="header-controls">
-                    <button id="btnClearAll" class="icon-btn" title="Borrar Chat">🗑️</button>
-                    <button id="btnLogout" class="icon-btn" title="Salir">🚪</button>
-                    <img id="headerAvatar" class="my-mini-avatar" src="">
+                <span style="font-weight:600; color:white;">Sala Global</span>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="clearChat()" class="icon-btn" style="font-size:18px;">🗑️</button>
+                    <button onclick="logout()" class="icon-btn" style="font-size:18px; color:#ff4b5c;">🚪</button>
+                    <img id="my-avatar-display" class="msg-avatar" style="border: 1px solid #ff4b5c;">
                 </div>
             </header>
 
+            <!-- Lista Mensajes (Scroll) -->
             <div id="messages-list"></div>
-            
-            <div id="emojiPicker" class="emoji-picker hidden"></div>
 
+            <!-- Panel Emojis -->
+            <div id="emoji-picker" class="emoji-picker hidden"></div>
+
+            <!-- Input Fijo -->
             <div class="chat-input-area">
-                <button id="btnEmojiToggle" class="tool-btn">😀</button>
-                <button id="btnImgUpload" class="tool-btn">📷</button>
-                <button id="btnOpenDraw" class="tool-btn">🖌️</button>
+                <button onclick="toggleEmoji()" class="icon-btn">😀</button>
+                <button onclick="document.getElementById('img-input').click()" class="icon-btn">📷</button>
+                <button onclick="openDraw()" class="icon-btn">🖌️</button>
                 
-                <input type="file" id="chatFileInput" accept="image/*" style="display:none">
-                <input type="text" id="messageInput" placeholder="Mensaje..." autocomplete="off">
-                <button id="btnSend" class="send-btn">➤</button>
+                <input type="file" id="img-input" style="display:none" accept="image/*">
+                <input type="text" id="msg-input" placeholder="Escribe..." autocomplete="off">
+                <button onclick="sendMsg()" class="send-btn">➤</button>
             </div>
         </div>
 
-        <!-- PANTALLA DE DIBUJO (MODAL) -->
-        <div id="drawing-modal" class="drawing-modal hidden">
-            <h3 style="color:white; text-align:center; font-size:14px; margin-top:5px; margin-bottom: 5px;">Lienzo</h3>
-            
-            <div class="canvas-container" id="canvasContainer">
-                <canvas id="drawCanvas"></canvas>
+        <!-- PANTALLA 3: DIBUJO -->
+        <div id="draw-screen" class="drawing-modal hidden">
+            <h3 style="color:white; text-align:center;">Lienzo</h3>
+            <div class="canvas-box" id="canvas-box">
+                <canvas id="canvas"></canvas>
             </div>
-            
-            <div class="draw-controls">
-                <button id="btnCancelDraw" class="btn-draw-action btn-cancel">Cerrar</button>
-                <button id="btnClearDraw" class="btn-draw-action btn-clear">Limpiar</button>
-                <button id="btnSendDraw" class="btn-draw-action btn-send-draw">Enviar</button>
+            <div class="draw-footer">
+                <button onclick="closeDraw()" class="draw-btn" style="background:#333; color:white;">Cancelar</button>
+                <button onclick="clearCanvas()" class="draw-btn" style="background:#ffa502; color:white;">Limpiar</button>
+                <button onclick="sendDraw()" class="draw-btn" style="background:#ff4b5c; color:white;">Enviar</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // ==========================================
-        // 1. FIREBASE CONFIG (¡PONER TUS DATOS AQUÍ!)
-        // ==========================================
+        // --- 1. CONFIGURACIÓN FIREBASE ---
         const firebaseConfig = {
-            apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
-            authDomain: "ja-chat-59c9e.firebaseapp.com",
-            projectId: "ja-chat-59c9e",
-            storageBucket: "ja-chat-59c9e.firebasestorage.app",
-            messagingSenderId: "967850675224",
-            appId: "1:967850675224:web:809c09d0a3aa117696076d"
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "NUMEROS",
+            appId: "APP_ID"
         };
-
+        
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ==========================================
-        // 2. LÓGICA PRINCIPAL
-        // ==========================================
-        let currentUser = "";
-        let currentAvatar = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; 
+        // --- 2. VARIABLES GLOBALES ---
+        let currentUser = null; // { name, avatar }
+        
+        // Elementos DOM
+        const authScreen = document.getElementById('auth-screen');
+        const chatScreen = document.getElementById('chat-screen');
+        const errorMsg = document.getElementById('auth-error');
+        const msgList = document.getElementById('messages-list');
+        const msgInput = document.getElementById('msg-input');
 
-        const screens = {
-            login: document.getElementById('login-screen'),
-            welcome: document.getElementById('welcome-screen'),
-            chat: document.getElementById('chat-screen'),
-            draw: document.getElementById('drawing-modal')
-        };
-        const inputs = {
-            user: document.getElementById('usernameInput'),
-            msg: document.getElementById('messageInput'),
-            fileAvatar: document.getElementById('fileInputAvatar'),
-            fileChat: document.getElementById('chatFileInput')
-        };
-        const emojiPicker = document.getElementById('emojiPicker');
-
-        // --- SESIÓN ---
-        window.onload = () => {
-            const savedUser = localStorage.getItem('chat_user');
-            const savedAvatar = localStorage.getItem('chat_avatar');
-            if (savedUser) {
-                currentUser = savedUser;
-                currentAvatar = savedAvatar || currentAvatar;
-                document.getElementById('welcomeName').textContent = currentUser;
-                document.getElementById('welcomeAvatar').src = currentAvatar;
-                screens.login.classList.add('hidden');
-                screens.welcome.classList.remove('hidden');
+        // --- 3. SISTEMA DE USUARIOS (AUTH SIMULADA EN FIRESTORE) ---
+        
+        // Función: Registrar
+        document.getElementById('btn-do-register').addEventListener('click', async () => {
+            const user = document.getElementById('reg-user').value.trim().toLowerCase(); // Usar minúsculas para ID
+            const pass = document.getElementById('reg-pass').value.trim();
+            const avatarSrc = document.getElementById('reg-avatar-img').src;
+            
+            if(!user || !pass) return showError("Falta usuario o contraseña");
+            
+            // 1. Verificar si existe
+            const docRef = db.collection("users").doc(user);
+            const docSnap = await docRef.get();
+            
+            if (docSnap.exists) {
+                return showError("Este usuario ya existe. Intenta iniciar sesión.");
             }
-        };
 
-        document.getElementById('btnContinue').addEventListener('click', enterChat);
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            localStorage.clear(); screens.welcome.classList.add('hidden'); screens.login.classList.remove('hidden');
-        });
-        document.getElementById('btnLogout').addEventListener('click', () => {
-            if(confirm("¿Salir?")) location.reload();
-        });
+            // 2. Crear usuario
+            const avatarToSave = (document.getElementById('reg-avatar-img').style.display !== 'none') 
+                                 ? avatarSrc 
+                                 : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
-        // --- LOGIN ---
-        document.getElementById('btnLogin').addEventListener('click', () => {
-            const name = inputs.user.value.trim();
-            if(!name) return alert("Escribe un nombre");
-            currentUser = name;
-            localStorage.setItem('chat_user', currentUser);
-            localStorage.setItem('chat_avatar', currentAvatar);
-            screens.login.classList.add('hidden');
-            enterChat();
+            await db.collection("users").doc(user).set({
+                password: pass,
+                avatar: avatarToSave,
+                originalName: document.getElementById('reg-user').value // Guardar nombre con mayúsculas originales
+            });
+
+            loginSuccess(document.getElementById('reg-user').value, avatarToSave);
         });
 
-        function enterChat() {
-            document.getElementById('headerAvatar').src = currentAvatar;
-            screens.welcome.classList.add('hidden');
-            screens.chat.classList.remove('hidden');
+        // Función: Login
+        document.getElementById('btn-do-login').addEventListener('click', async () => {
+            const user = document.getElementById('login-user').value.trim().toLowerCase();
+            const pass = document.getElementById('login-pass').value.trim();
+
+            if(!user || !pass) return showError("Completa los campos");
+
+            const docRef = db.collection("users").doc(user);
+            const docSnap = await docRef.get();
+
+            if (!docSnap.exists) {
+                return showError("Usuario no encontrado.");
+            }
+
+            const data = docSnap.data();
+            if (data.password === pass) {
+                loginSuccess(data.originalName, data.avatar);
+            } else {
+                showError("Contraseña incorrecta.");
+            }
+        });
+
+        function loginSuccess(name, avatar) {
+            currentUser = { name: name, avatar: avatar };
+            // Guardar sesión simple en local
+            localStorage.setItem('redchat_user', name);
+            localStorage.setItem('redchat_avatar', avatar);
+            
+            // UI
+            document.getElementById('my-avatar-display').src = avatar;
+            authScreen.classList.add('hidden');
+            chatScreen.classList.remove('hidden');
             loadMessages();
         }
 
-        // --- IMÁGENES (Compresión Optimizada) ---
-        function compressImage(file, callback) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const MAX = 500; // Calidad aceptable para móvil
-                    let w = img.width, h = img.height;
-                    if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
-                    else { if(h > MAX) { w *= MAX/h; h = MAX; } }
-                    canvas.width = w; canvas.height = h;
-                    ctx.drawImage(img, 0, 0, w, h);
-                    callback(canvas.toDataURL('image/jpeg', 0.8));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+        function logout() {
+            localStorage.clear();
+            location.reload();
         }
 
-        inputs.fileAvatar.addEventListener('change', (e) => {
-            if(e.target.files[0]) compressImage(e.target.files[0], (b64) => {
-                currentAvatar = b64;
-                document.getElementById('avatarPreviewImg').src = b64;
-                document.getElementById('avatarPreviewImg').style.display = 'block';
-                document.getElementById('avatarIcon').style.display = 'none';
-            });
-        });
+        // Auto-Login si ya entró antes
+        window.onload = () => {
+            const u = localStorage.getItem('redchat_user');
+            const a = localStorage.getItem('redchat_avatar');
+            if(u && a) loginSuccess(u, a);
+        };
 
-        document.getElementById('btnImgUpload').addEventListener('click', () => inputs.fileChat.click());
-        inputs.fileChat.addEventListener('change', (e) => {
-            if(e.target.files[0]) compressImage(e.target.files[0], (b64) => sendMessage(null, b64));
-        });
+        // --- 4. LÓGICA DE CHAT ---
+        function sendMsg(img = null) {
+            const txt = msgInput.value.trim();
+            if (!txt && !img) return;
 
-        // --- EMOJIS (Lista expandida) ---
-        ["😀","😂","😍","😎","😭","😡","👍","👎","🎉","❤️","🔥","👻","👽","💩","👋","👀"].forEach(emo => {
-            const s = document.createElement('span'); s.textContent = emo; s.className = "emoji-btn";
-            s.onclick = () => { inputs.msg.value += emo; emojiPicker.classList.add('hidden'); inputs.msg.focus(); };
-            emojiPicker.appendChild(s);
-        });
-        document.getElementById('btnEmojiToggle').addEventListener('click', (e) => {
-            e.stopPropagation();
-            emojiPicker.classList.toggle('hidden');
-        });
-        document.body.addEventListener('click', () => emojiPicker.classList.add('hidden')); // Cerrar al tocar fuera
-
-        // ==========================================
-        // 3. CANVAS (DIBUJO RESPONSIVE)
-        // ==========================================
-        const canvas = document.getElementById('drawCanvas');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let lastX = 0, lastY = 0;
-
-        // Resize Canvas dinámico
-        function resizeCanvas() {
-            const container = document.getElementById('canvasContainer');
-            if(container.offsetWidth > 0) {
-                // Guardar contenido actual si fuera necesario (aquí se limpia al redimensionar por simplicidad)
-                canvas.width = container.offsetWidth;
-                canvas.height = container.offsetHeight;
-                ctx.fillStyle = "white";
-                ctx.fillRect(0,0, canvas.width, canvas.height);
-                ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#000000';
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-
-        document.getElementById('btnOpenDraw').addEventListener('click', () => {
-            screens.draw.classList.remove('hidden');
-            setTimeout(resizeCanvas, 100); // Pequeño delay para asegurar que el container renderizó
-        });
-
-        document.getElementById('btnCancelDraw').addEventListener('click', () => screens.draw.classList.add('hidden'));
-        document.getElementById('btnClearDraw').addEventListener('click', () => {
-            ctx.fillStyle = "white"; ctx.fillRect(0,0, canvas.width, canvas.height);
-        });
-        document.getElementById('btnSendDraw').addEventListener('click', () => {
-            const drawingUrl = canvas.toDataURL('image/png');
-            sendMessage(null, drawingUrl);
-            screens.draw.classList.add('hidden');
-        });
-
-        // Eventos Touch (Móvil)
-        function getTouchPos(canvasDom, touchEvent) {
-            var rect = canvasDom.getBoundingClientRect();
-            // Soporte multitouch básico (toma el primer dedo)
-            return {
-                x: touchEvent.touches[0].clientX - rect.left,
-                y: touchEvent.touches[0].clientY - rect.top
-            };
-        }
-
-        // Mouse Events (PC)
-        canvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
-        canvas.addEventListener('mousemove', (e) => {
-            if(!isDrawing) return;
-            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        });
-        canvas.addEventListener('mouseup', () => isDrawing = false);
-        canvas.addEventListener('mouseout', () => isDrawing = false);
-
-        // Touch Events (Mobile) - IMPORTANTE: passive: false para prevenir scroll
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); isDrawing = true;
-            const pos = getTouchPos(canvas, e);
-            [lastX, lastY] = [pos.x, pos.y];
-        }, {passive: false});
-        
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); if(!isDrawing) return;
-            const pos = getTouchPos(canvas, e);
-            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
-            [lastX, lastY] = [pos.x, pos.y];
-        }, {passive: false});
-        
-        canvas.addEventListener('touchend', (e) => { e.preventDefault(); isDrawing = false; });
-
-        // ==========================================
-        // 4. CHAT SYSTEM
-        // ==========================================
-        document.getElementById('btnSend').addEventListener('click', () => {
-            const txt = inputs.msg.value.trim();
-            if(txt) sendMessage(txt, null);
-        });
-        
-        // Enviar con Enter
-        inputs.msg.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const txt = inputs.msg.value.trim();
-                if(txt) sendMessage(txt, null);
-            }
-        });
-
-        function sendMessage(text, imgBase64) {
             db.collection("messages").add({
-                user: currentUser, avatar: currentAvatar,
-                text: text || "", image: imgBase64 || null,
+                user: currentUser.name,
+                avatar: currentUser.avatar,
+                text: txt,
+                image: img,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            inputs.msg.value = ""; emojiPicker.classList.add('hidden');
+            msgInput.value = "";
+            document.getElementById('emoji-picker').classList.add('hidden');
         }
+        
+        // Enviar con Enter
+        msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
 
         function loadMessages() {
             db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snap => {
-                const list = document.getElementById('messages-list');
-                list.innerHTML = "";
+                msgList.innerHTML = "";
                 snap.forEach(doc => {
-                    const data = doc.data();
-                    const isMe = data.user === currentUser;
+                    const d = doc.data();
+                    const isMe = d.user === currentUser.name;
+                    
                     const row = document.createElement('div');
                     row.className = `msg-row ${isMe ? 'sent' : 'received'}`;
                     
                     let content = "";
-                    if(data.image) content += `<img src="${data.image}" class="chat-image-content">`;
-                    if(data.text) content += `<div style="margin-top:4px">${data.text}</div>`;
+                    if(d.image) content += `<img src="${d.image}" class="chat-image">`;
+                    if(d.text) content += `<div>${d.text}</div>`;
 
                     row.innerHTML = `
-                        ${!isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
+                        ${!isMe ? `<img src="${d.avatar}" class="msg-avatar">` : ''}
                         <div class="bubble">
-                            ${isMe ? `<div class="delete-btn" onclick="deleteMsg('${doc.id}')">✕</div>` : ''}
-                            ${!isMe ? `<small style="opacity:0.6; font-size:10px; display:block; margin-bottom:2px;">${data.user}</small>` : ''}
+                            ${isMe ? `<div class="delete-btn" onclick="delMsg('${doc.id}')">✕</div>` : ''}
+                            ${!isMe ? `<small style="font-size:10px; color:#aaa; display:block;">${d.user}</small>` : ''}
                             ${content}
                         </div>
-                        ${isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
                     `;
-                    list.appendChild(row);
+                    msgList.appendChild(row);
                 });
-                // Scroll al fondo suavemente
-                list.scrollTop = list.scrollHeight;
+                // Auto scroll inteligente
+                msgList.scrollTop = msgList.scrollHeight;
             });
         }
 
-        window.deleteMsg = (id) => { if(confirm("¿Borrar mensaje?")) db.collection("messages").doc(id).delete(); };
-        document.getElementById('btnClearAll').addEventListener('click', async () => {
-            if(confirm("⚠ ¿BORRAR TODO EL HISTORIAL PARA TODOS?")) {
-                const snap = await db.collection("messages").get();
-                snap.forEach(doc => doc.ref.delete());
+        window.delMsg = (id) => { if(confirm("¿Borrar mensaje?")) db.collection("messages").doc(id).delete(); };
+        window.clearChat = async () => {
+            if(confirm("⚠ ¿BORRAR TODO PARA SIEMPRE?")) {
+                const q = await db.collection("messages").get();
+                q.forEach(d => d.ref.delete());
             }
+        };
+
+        // --- 5. EXTRAS (Avatar, Draw, Emojis) ---
+        
+        // Subida Avatar
+        document.getElementById('reg-avatar-input').addEventListener('change', function() {
+            compress(this.files[0], (b64) => {
+                const img = document.getElementById('reg-avatar-img');
+                img.src = b64; img.style.display = 'block';
+                document.getElementById('reg-avatar-icon').style.display = 'none';
+            });
         });
+
+        // Subida Imagen Chat
+        document.getElementById('img-input').addEventListener('change', function() {
+            compress(this.files[0], (b64) => sendMsg(b64));
+        });
+
+        function compress(file, cb) {
+            if(!file) return;
+            const r = new FileReader();
+            r.onload = (e) => {
+                const i = new Image();
+                i.onload = () => {
+                    const c = document.createElement('canvas');
+                    const x = c.getContext('2d');
+                    const MAX = 400; let w=i.width, h=i.height;
+                    if(w>h){if(w>MAX){h*=MAX/w;w=MAX}}else{if(h>MAX){w*=MAX/h;h=MAX}}
+                    c.width=w; c.height=h; x.drawImage(i,0,0,w,h);
+                    cb(c.toDataURL('image/jpeg', 0.8));
+                };
+                i.src = e.target.result;
+            };
+            r.readAsDataURL(file);
+        }
+
+        // Helpers UI
+        function toggleAuth(view) {
+            document.getElementById('auth-error').innerText = "";
+            if(view === 'login') {
+                document.getElementById('register-view').classList.add('hidden');
+                document.getElementById('login-view').classList.remove('hidden');
+            } else {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('register-view').classList.remove('hidden');
+            }
+        }
+        function showError(t) { errorMsg.innerText = t; setTimeout(()=>errorMsg.innerText="", 3000); }
+
+        // Emojis
+        const em = ["😀","😂","😍","😎","😭","😡","👍","👎","🔥","❤️","🎉","💩","👻","👀","👋","💀"];
+        const ep = document.getElementById('emoji-picker');
+        em.forEach(e => {
+            const b = document.createElement('div'); b.className='emoji-btn'; b.innerText=e;
+            b.onclick = () => { msgInput.value += e; ep.classList.add('hidden'); msgInput.focus(); };
+            ep.appendChild(b);
+        });
+        window.toggleEmoji = () => ep.classList.toggle('hidden');
+
+        // Canvas / Dibujo
+        const cvs = document.getElementById('canvas');
+        const ctx = cvs.getContext('2d');
+        let isD = false;
+
+        function resizeCvs() {
+            const b = document.getElementById('canvas-box');
+            cvs.width = b.offsetWidth; cvs.height = b.offsetHeight;
+            ctx.fillStyle='white'; ctx.fillRect(0,0,cvs.width,cvs.height);
+            ctx.lineJoin='round'; ctx.lineCap='round'; ctx.lineWidth=4;
+        }
+
+        window.openDraw = () => { document.getElementById('draw-screen').classList.remove('hidden'); resizeCvs(); };
+        window.closeDraw = () => document.getElementById('draw-screen').classList.add('hidden');
+        window.clearCanvas = () => { ctx.fillRect(0,0,cvs.width,cvs.height); };
+        window.sendDraw = () => { sendMsg(cvs.toDataURL()); closeDraw(); };
+
+        // Eventos Dibujo (Mouse/Touch)
+        function getPos(e) {
+            const r = cvs.getBoundingClientRect();
+            const t = e.touches ? e.touches[0] : e;
+            return { x: t.clientX - r.left, y: t.clientY - r.top };
+        }
+        ['mousedown','touchstart'].forEach(ev => cvs.addEventListener(ev, (e)=>{ 
+            isD=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault();
+        }, {passive:false}));
+        ['mousemove','touchmove'].forEach(ev => cvs.addEventListener(ev, (e)=>{ 
+            if(!isD)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault();
+        }, {passive:false}));
+        ['mouseup','touchend'].forEach(ev => cvs.addEventListener(ev, ()=>isD=false));
 
     </script>
 </body>
