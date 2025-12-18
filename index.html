@@ -3,135 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Firebase Realtime</title>
-    <!-- Estilos CSS (Igual que antes) -->
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #e5ddd5; margin: 0; display: flex; justify-content: center; height: 100vh; }
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10; }
-        .login-box { background: white; padding: 30px; border-radius: 10px; text-align: center; }
-        .login-box input { padding: 10px; margin-bottom: 10px; width: 200px; border: 1px solid #ccc; border-radius: 5px; }
-        .login-box button { padding: 10px 20px; background: #075e54; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .chat-container { width: 100%; max-width: 600px; background: #fff; display: flex; flex-direction: column; height: 100%; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        header { background-color: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; }
-        #messages-list { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-color: #e5ddd5; }
-        .msg { max-width: 70%; padding: 8px 15px; border-radius: 10px; font-size: 14px; position: relative; word-wrap: break-word; }
-        .sent { background-color: #dcf8c6; align-self: flex-end; border-top-right-radius: 0; }
-        .received { background-color: white; align-self: flex-start; border-top-left-radius: 0; }
-        form { display: flex; padding: 10px; background: #f0f0f0; }
-        form input { flex: 1; padding: 10px; border-radius: 20px; border: none; outline: none; margin-right: 10px; }
-        form button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 50%; cursor: pointer; }
-        .hidden { display: none !important; }
-        .msg strong { display: block; font-size: 11px; color: #d32f2f; margin-bottom: 3px;}
-    </style>
-
-    <!-- 1. IMPORTAR FIREBASE (Versión Compat - Más estable para ejecutar localmente) -->
+    <title>Red Dark Chat - Pro</title>
+    <!-- Fuente Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* --- 1. ESTÉTICA Y FONDO DE CALIDAD --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            /* Fondo Degradado de Calidad (Radial Mesh) */
+            background-color: #050505;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(350,90%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(0,0%,15%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(350,90%,20%,1) 0, transparent 50%), 
+                radial-gradient(at 0% 100%, hsla(0,0%,10%,1) 0, transparent 50%);
+            color: white;
+        }
+
+        /* Contenedor Principal (Estilo App Móvil) */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 95vh;
+            background: rgba(30, 30, 35, 0.85); /* Vidrio oscuro */
+            backdrop-filter: blur(15px);
+            border-radius: 35px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- PANTALLA DE LOGIN --- */
+        #login-screen {
+            position: absolute; width: 100%; height: 100%;
+            background: #121212;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20; padding: 30px; text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Círculo de previsualización de foto */
+        .avatar-preview {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: #252525;
+            border: 2px dashed #ff4b5c;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .avatar-preview span { font-size: 30px; opacity: 0.5; }
+        .avatar-preview:hover { background: #333; }
+
+        input[type="file"] { display: none; } /* Ocultar input real */
+
+        .input-dark {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: 1px solid #333; background: #1e1e1e;
+            color: white; margin-bottom: 15px; outline: none;
+            transition: 0.3s;
+        }
+        .input-dark:focus { border-color: #ff4b5c; box-shadow: 0 0 10px rgba(255, 75, 92, 0.2); }
+
+        .btn-main {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #ff4b5c, #d63031);
+            color: white; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(214, 48, 49, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-main:active { transform: scale(0.97); }
+
+        /* --- PANTALLA CHAT --- */
+        .chat-header {
+            padding: 15px 20px;
+            background: rgba(20, 20, 20, 0.9);
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .my-mini-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #ff4b5c; }
+
+        #messages-list {
+            flex: 1; padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        /* Scrollbar fina */
+        #messages-list::-webkit-scrollbar { width: 4px; }
+        #messages-list::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+        .msg-row { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+        
+        .bubble {
+            padding: 10px 14px; border-radius: 18px;
+            font-size: 13px; line-height: 1.4; position: relative;
+            word-wrap: break-word;
+        }
+
+        /* Estilos Míos (Derecha) */
+        .sent { flex-direction: row-reverse; align-self: flex-end; }
+        .sent .bubble {
+            background: linear-gradient(135deg, #ff4b5c, #e84118);
+            color: white; border-bottom-right-radius: 2px;
+        }
+        
+        /* Estilos Otros (Izquierda) */
+        .received { align-self: flex-start; }
+        .received .bubble {
+            background: #2d3436; color: #dfe6e9;
+            border-bottom-left-radius: 2px;
+        }
+        .user-name { font-size: 10px; opacity: 0.6; margin-bottom: 2px; display: block; }
+
+        /* BOTÓN DE BORRAR (Basura) */
+        .delete-btn {
+            position: absolute; top: -8px; left: -8px;
+            width: 20px; height: 20px; background: #fff;
+            color: #d63031; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; font-size: 12px; border: 1px solid #ddd;
+            display: none; /* Oculto por defecto */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        /* Mostrar botón borrar solo al pasar el mouse sobre MI mensaje */
+        .sent:hover .delete-btn { display: flex; }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 15px; background: rgba(20, 20, 20, 0.9);
+            display: flex; gap: 10px; align-items: center;
+        }
+        .chat-input-area input {
+            flex: 1; padding: 12px; border-radius: 25px;
+            border: none; background: #2d3436; color: white; outline: none;
+        }
+        .send-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none;
+            background: #ff4b5c; color: white; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
 
-    <!-- Login -->
-    <div id="login-screen">
-        <div class="login-box">
-            <h2>Chat en Vivo</h2>
-            <input type="text" id="usernameInput" placeholder="Tu nombre..." autocomplete="off">
-            <button id="btnLogin">Entrar al Chat</button>
-        </div>
-    </div>
+    <div class="app-container">
+        
+        <!-- LOGIN (Con subida de foto) -->
+        <div id="login-screen">
+            <h2 style="color:#ff4b5c; margin-bottom:5px;">RED CHAT</h2>
+            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Sube tu foto y únete</p>
 
-    <!-- Chat -->
-    <div class="chat-container hidden" id="chat-screen">
-        <header>Sala de Chat</header>
-        <div id="messages-list"></div>
-        <form id="message-form">
-            <input type="text" id="messageInput" placeholder="Escribe aquí..." autocomplete="off">
-            <button type="submit">➤</button>
-        </form>
+            <!-- Previsualización y click para subir -->
+            <label for="fileInput" class="avatar-preview">
+                <img id="avatarPreviewImg" src="" alt="">
+                <span id="avatarIcon">📷</span>
+            </label>
+            <input type="file" id="fileInput" accept="image/*">
+
+            <input type="text" id="usernameInput" class="input-dark" placeholder="Tu Apodo / Nickname" autocomplete="off">
+            <button id="btnLogin" class="btn-main">ENTRAR</button>
+        </div>
+
+        <!-- CHAT -->
+        <div id="chat-screen" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
+            <header class="chat-header">
+                <span style="font-weight:600; font-size:14px;">Sala Principal</span>
+                <img id="headerAvatar" class="my-mini-avatar" src="" alt="">
+            </header>
+
+            <div id="messages-list"></div>
+
+            <form id="message-form" class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Escribe algo..." autocomplete="off">
+                <button type="submit" class="send-btn">➤</button>
+            </form>
+        </div>
+
     </div>
 
     <script>
-        // ------------------------------------------------------------------
-        // 2. PEGA TU CONFIGURACIÓN AQUÍ (Bórralo y pon lo que copiaste de Firebase)
-        // ------------------------------------------------------------------
+        // ==========================================
+        // 1. CONFIGURACIÓN FIREBASE (REEMPLAZAR AQUI)
+        // ==========================================
         const firebaseConfig = {
-             apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
-             authDomain: "ja-chat-59c9e.firebaseapp.com",
-             projectId: "ja-chat-59c9e",
-             storageBucket: "ja-chat-59c9e.firebasestorage.app",
-             messagingSenderId: "967850675224",
-             appId: "1:967850675224:web:809c09d0a3aa117696076d"
+            apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
+            authDomain: "ja-chat-59c9e.firebaseapp.com",
+            projectId: "ja-chat-59c9e",
+            storageBucket: "ja-chat-59c9e.firebasestorage.app",
+            messagingSenderId: "967850675224",
+            appId: "1:967850675224:web:809c09d0a3aa117696076d"
         };
 
-        // 3. INICIALIZAR (Sintaxis simplificada)
-        firebase.initializeApp(firebaseConfig);
+        // Inicializar
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
 
-        // ELEMENTOS DOM
+        // ==========================================
+        // 2. LÓGICA DE LA APP
+        // ==========================================
+        
+        // Variables de Usuario
         let currentUser = "";
+        let currentAvatarBase64 = "https://cdn-icons-png.flaticon.com/512/847/847969.png"; // Avatar Default
+
+        // Elementos DOM
         const loginScreen = document.getElementById('login-screen');
         const chatScreen = document.getElementById('chat-screen');
         const usernameInput = document.getElementById('usernameInput');
-        const btnLogin = document.getElementById('btnLogin');
-        const messageForm = document.getElementById('message-form');
-        const messageInput = document.getElementById('messageInput');
-        const messagesList = document.getElementById('messages-list');
-
-        // Entrar
-        btnLogin.addEventListener('click', () => {
-            if(usernameInput.value.trim()) {
-                currentUser = usernameInput.value.trim();
-                loginScreen.classList.add('hidden');
-                chatScreen.classList.remove('hidden');
-                setupRealtimeListener();
-            } else { alert("Pon un nombre"); }
-        });
-
-        // Enviar Mensaje
-        messageForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = messageInput.value.trim();
-            if(text) {
-                // Escribir en la base de datos
-                db.collection("messages").add({
-                    user: currentUser,
-                    text: text,
-                    // Usamos Date.now() para ordenar fácilmente
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch((error) => {
-                    console.error("Error enviando:", error);
-                });
-                messageInput.value = "";
+        const fileInput = document.getElementById('fileInput');
+        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+        const avatarIcon = document.getElementById('avatarIcon');
+        
+        // --- PROCESAR IMAGEN DEL DISPOSITIVO ---
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(readerEvent) {
+                    // Creamos una imagen para redimensionarla (Importante para no llenar la BD)
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Redimensionar a máximo 100x100px (Suficiente para avatar)
+                        const MAX_SIZE = 150;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                        } else {
+                            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Obtener Base64 comprimido
+                        currentAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        // Mostrar preview
+                        avatarPreviewImg.src = currentAvatarBase64;
+                        avatarPreviewImg.style.display = 'block';
+                        avatarIcon.style.display = 'none';
+                    }
+                    img.src = readerEvent.target.result;
+                }
+                reader.readAsDataURL(file);
             }
         });
 
-        // 4. ESCUCHAR EN TIEMPO REAL (Esta es la parte mágica)
-        function setupRealtimeListener() {
-            // .onSnapshot() se activa AUTOMÁTICAMENTE cuando alguien escribe
-            db.collection("messages")
-              .orderBy("timestamp", "asc")
-              .onSnapshot((snapshot) => {
-                  
-                  // Limpiamos el chat para redibujarlo (simple pero efectivo)
-                  messagesList.innerHTML = "";
+        // --- ENTRAR AL CHAT ---
+        document.getElementById('btnLogin').addEventListener('click', () => {
+            const name = usernameInput.value.trim();
+            if(!name) return alert("Escribe un nombre");
 
-                  snapshot.forEach((doc) => {
+            currentUser = name;
+            document.getElementById('headerAvatar').src = currentAvatarBase64;
+            
+            loginScreen.classList.add('hidden');
+            chatScreen.classList.remove('hidden');
+            
+            setupChat();
+        });
+
+        // --- ENVIAR MENSAJE ---
+        document.getElementById('message-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = document.getElementById('messageInput').value.trim();
+            if(text) {
+                db.collection("messages").add({
+                    user: currentUser,
+                    avatar: currentAvatarBase64,
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('messageInput').value = "";
+            }
+        });
+
+        // --- FUNCIÓN PRINCIPAL: ESCUCHAR Y RENDERIZAR CHAT ---
+        function setupChat() {
+            db.collection("messages").orderBy("timestamp", "asc")
+              .onSnapshot(snapshot => {
+                  const list = document.getElementById('messages-list');
+                  list.innerHTML = ""; // Limpiar lista
+
+                  snapshot.forEach(doc => {
                       const data = doc.data();
-                      const div = document.createElement('div');
-                      
-                      const type = data.user === currentUser ? 'sent' : 'received';
-                      div.classList.add('msg', type);
-                      
-                      div.innerHTML = `<strong>${data.user}</strong> ${data.text}`;
-                      messagesList.appendChild(div);
-                  });
+                      const id = doc.id; // ID del documento para borrarlo
+                      const isMe = data.user === currentUser;
 
-                  // Scroll abajo
-                  messagesList.scrollTop = messagesList.scrollHeight;
-              }, (error) => {
-                  console.error("Error recibiendo mensajes:", error);
-                  alert("Error: Revisa la consola (F12) o las Reglas de Firebase");
+                      // Crear contenedor fila
+                      const row = document.createElement('div');
+                      row.className = `msg-row ${isMe ? 'sent' : 'received'}`;
+
+                      // HTML del mensaje
+                      // Nota: Solo agregamos botón borrar si 'isMe' es true
+                      row.innerHTML = `
+                          ${!isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
+                          <div class="bubble">
+                              ${isMe ? `<div class="delete-btn" onclick="deleteMessage('${id}')">✕</div>` : ''}
+                              ${!isMe ? `<span class="user-name">${data.user}</span>` : ''}
+                              ${data.text}
+                          </div>
+                          ${isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
+                      `;
+
+                      list.appendChild(row);
+                  });
+                  list.scrollTop = list.scrollHeight;
               });
         }
+
+        // --- FUNCIÓN BORRAR MENSAJE ---
+        window.deleteMessage = function(docId) {
+            if(confirm("¿Borrar mensaje?")) {
+                db.collection("messages").doc(docId).delete()
+                    .catch(error => console.error("Error borrando:", error));
+            }
+        };
+
     </script>
 </body>
 </html>
