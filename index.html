@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red Dark Chat - Artist</title>
+    <!-- VIEWPORT IMPORTANTE PARA MÓVILES: Evita zoom y ajusta al ancho real -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Red Dark Chat - Mobile</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -12,22 +13,24 @@
 
     <style>
         /* --- ESTILOS GENERALES --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
-            height: 100vh;
+            /* Usamos 100dvh para móviles modernos, fallback a 100vh */
+            height: 100vh; height: 100dvh;
             display: flex; justify-content: center; align-items: center; overflow: hidden;
             background-color: #050505;
+            /* Fondo Mesh Rojo Oscuro */
             background-image: 
                 radial-gradient(at 0% 0%, hsla(350,90%,30%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 0%, hsla(0,0%,15%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 100%, hsla(350,90%,20%,1) 0, transparent 50%), 
                 radial-gradient(at 0% 100%, hsla(0,0%,10%,1) 0, transparent 50%);
             color: white;
-            /* Prevenir scroll rebote en móviles */
-            overscroll-behavior: none;
+            overscroll-behavior: none; /* Evita el rebote de scroll en iOS */
         }
 
+        /* --- CONTENEDOR APP --- */
         .app-container {
             width: 100%; max-width: 420px; height: 95vh;
             background: rgba(30, 30, 35, 0.85); backdrop-filter: blur(15px);
@@ -36,125 +39,132 @@
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
+        /* --- RESPONSIVE: AJUSTES PARA CELULARES --- */
+        @media (max-width: 600px) {
+            .app-container {
+                max-width: 100%;
+                height: 100%;       /* Ocupar toda la pantalla */
+                border-radius: 0;   /* Quitar bordes redondos externos */
+                border: none;
+            }
+        }
+
         /* --- PANTALLAS (LOGIN / WELCOME) --- */
         .screen {
             position: absolute; width: 100%; height: 100%;
             background: #121212; z-index: 20; padding: 30px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; transition: opacity 0.5s ease;
+            text-align: center; transition: opacity 0.4s ease;
         }
         
         .avatar-preview {
-            width: 100px; height: 100px; border-radius: 50%;
+            width: 110px; height: 110px; border-radius: 50%;
             background: #252525; border: 2px dashed #ff4b5c;
-            margin-bottom: 20px; overflow: hidden;
+            margin-bottom: 25px; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             position: relative; cursor: pointer;
         }
         .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
         
         .input-dark {
-            width: 100%; padding: 15px; border-radius: 12px;
-            border: 1px solid #333; background: #1e1e1e;
+            width: 100%; padding: 16px; border-radius: 15px;
+            border: 1px solid #333; background: #1e1e1e; font-size: 16px; /* Evita zoom en iOS */
             color: white; margin-bottom: 15px; outline: none;
         }
         .btn-main {
-            width: 100%; padding: 15px; border-radius: 12px; border: none;
-            background: linear-gradient(135deg, #ff4b5c, #d63031);
+            width: 100%; padding: 16px; border-radius: 15px; border: none;
+            background: linear-gradient(135deg, #ff4b5c, #d63031); font-size: 16px;
             color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(255, 75, 92, 0.3);
         }
-        .btn-sec { background: transparent; border: 1px solid #444; color: #aaa; }
+        .btn-sec { background: transparent; border: 1px solid #444; color: #aaa; box-shadow: none; }
 
         /* --- CHAT HEADER --- */
         .chat-header {
-            padding: 15px 20px; background: rgba(20, 20, 20, 0.9);
+            padding: 15px 15px; background: rgba(20, 20, 20, 0.95);
             border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; /* No encoger header */
         }
-        .header-controls { display: flex; gap: 15px; align-items: center; }
-        .icon-btn { background: none; border: none; font-size: 18px; cursor: pointer; transition: transform 0.2s; }
-        .icon-btn:hover { transform: scale(1.2); }
-        .my-mini-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #ff4b5c; }
+        .header-controls { display: flex; gap: 12px; align-items: center; }
+        .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
+        .my-mini-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #ff4b5c; }
 
         /* --- CHAT LIST --- */
         #messages-list {
-            flex: 1; padding: 20px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 12px;
+            flex: 1; padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 15px;
+            scroll-behavior: smooth;
         }
-        #messages-list::-webkit-scrollbar { width: 4px; }
-        #messages-list::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
-
-        .msg-row { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; }
-        .msg-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+        
+        .msg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 88%; }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
         
         .bubble {
-            padding: 10px 14px; border-radius: 18px; font-size: 13px;
+            padding: 12px 16px; border-radius: 20px; font-size: 14px;
             line-height: 1.4; position: relative; word-wrap: break-word;
         }
         .chat-image-content {
-            max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; background: white;
+            max-width: 100%; border-radius: 12px; margin-top: 6px; display: block; background: white;
         }
 
         .sent { flex-direction: row-reverse; align-self: flex-end; }
-        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 2px; }
+        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 4px; }
         .received { align-self: flex-start; }
-        .received .bubble { background: #2d3436; color: #dfe6e9; border-bottom-left-radius: 2px; }
+        .received .bubble { background: #2d3436; color: #dfe6e9; border-bottom-left-radius: 4px; }
         
+        /* Botón borrar (Siempre visible en móvil si es touch, o hover en PC) */
         .delete-btn {
-            position: absolute; top: -8px; left: -8px; width: 20px; height: 20px;
+            position: absolute; top: -10px; left: -5px; width: 24px; height: 24px;
             background: #fff; color: #d63031; border-radius: 50%;
-            display: none; justify-content: center; align-items: center; cursor: pointer; font-size: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 5;
+            display: none; justify-content: center; align-items: center; cursor: pointer; 
+            font-size: 14px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 5;
         }
         .sent:hover .delete-btn { display: flex; }
+        /* En táctil a veces no hay hover, mostrar al tocar la burbuja se podría con JS, pero hover funciona en muchos */
 
         /* --- INPUT AREA --- */
         .chat-input-area {
-            padding: 10px 15px; background: rgba(20, 20, 20, 0.9);
-            display: flex; gap: 8px; align-items: center; position: relative;
+            padding: 10px; background: rgba(20, 20, 20, 0.95);
+            display: flex; gap: 6px; align-items: center; position: relative;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Ajuste iPhone X+ */
         }
         .chat-input-area input[type="text"] {
-            flex: 1; padding: 12px; border-radius: 25px; border: none;
-            background: #2d3436; color: white; outline: none;
+            flex: 1; padding: 14px; border-radius: 25px; border: none;
+            background: #2d3436; color: white; outline: none; font-size: 15px;
         }
-        .tool-btn { font-size: 20px; background: none; border: none; cursor: pointer; color: #aaa; padding: 5px; }
-        .tool-btn:hover { color: #fff; transform: scale(1.1); }
+        .tool-btn { font-size: 22px; background: none; border: none; cursor: pointer; color: #bbb; padding: 8px; }
         .send-btn {
-            width: 40px; height: 40px; border-radius: 50%; border: none;
-            background: #ff4b5c; color: white; cursor: pointer;
+            width: 44px; height: 44px; border-radius: 50%; border: none; flex-shrink: 0;
+            background: #ff4b5c; color: white; cursor: pointer; font-size: 18px;
+            display: flex; justify-content: center; align-items: center;
         }
 
-        /* EMOJI PICKER */
+        /* EMOJI PICKER RESPONSIVE */
         .emoji-picker {
-            position: absolute; bottom: 70px; left: 10px;
+            position: absolute; bottom: 80px; left: 10px; right: 10px; /* Ancho fluido */
             background: #2d3436; padding: 10px; border-radius: 15px;
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6); z-index: 10;
         }
-        .emoji-btn { font-size: 20px; cursor: pointer; padding: 5px; border-radius: 5px; }
-        .emoji-btn:hover { background: rgba(255,255,255,0.1); }
+        .emoji-btn { font-size: 24px; cursor: pointer; padding: 8px; border-radius: 8px; text-align: center; }
 
-        /* --- NUEVO: MODAL DE DIBUJO --- */
+        /* --- MODAL DE DIBUJO --- */
         .drawing-modal {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #121212; z-index: 50; display: flex; flex-direction: column;
-            padding: 10px;
+            padding: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom));
         }
         
         .canvas-container {
-            flex: 1; background: white; /* HOJA BLANCA */
-            border-radius: 15px; margin: 10px 0;
-            overflow: hidden; position: relative;
-            touch-action: none; /* Importante para dibujar en móvil */
-            cursor: crosshair;
+            flex: 1; background: white; border-radius: 15px; margin: 10px 0;
+            overflow: hidden; position: relative; touch-action: none; cursor: crosshair;
         }
-        
         canvas { display: block; width: 100%; height: 100%; }
 
-        .draw-controls {
-            display: flex; justify-content: space-between; gap: 10px; padding-bottom: 10px;
-        }
+        .draw-controls { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; }
         .btn-draw-action {
-            flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer;
+            flex: 1; padding: 14px; border-radius: 12px; border: none; 
+            font-weight: 600; cursor: pointer; font-size: 14px;
         }
         .btn-cancel { background: #333; color: white; }
         .btn-clear { background: #ff9f43; color: white; }
@@ -169,12 +179,12 @@
         
         <!-- LOGIN SCREEN -->
         <div id="login-screen" class="screen">
-            <h2 style="color:#ff4b5c; margin-bottom:5px;">RED CHAT</h2>
-            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Crea tu perfil</p>
+            <h2 style="color:#ff4b5c; margin-bottom:5px; font-size: 28px;">RED CHAT</h2>
+            <p style="font-size:14px; color:#aaa; margin-bottom:30px;">Identifícate</p>
 
             <label for="fileInputAvatar" class="avatar-preview">
                 <img id="avatarPreviewImg" src="" style="display:none">
-                <span id="avatarIcon" style="font-size:30px; opacity:0.5;">📷</span>
+                <span id="avatarIcon" style="font-size:40px; opacity:0.5;">📷</span>
             </label>
             <input type="file" id="fileInputAvatar" accept="image/*" style="display:none">
 
@@ -184,19 +194,19 @@
 
         <!-- WELCOME SCREEN -->
         <div id="welcome-screen" class="screen hidden">
-            <div style="width:80px; height:80px; border-radius:50%; overflow:hidden; border:2px solid #ff4b5c; margin-bottom:15px;">
+            <div style="width:100px; height:100px; border-radius:50%; overflow:hidden; border:3px solid #ff4b5c; margin-bottom:20px;">
                 <img id="welcomeAvatar" src="" style="width:100%; height:100%; object-fit:cover;">
             </div>
-            <h3 style="margin-bottom:5px;">Hola, <span id="welcomeName" style="color:#ff4b5c">User</span></h3>
-            <p style="font-size:12px; color:#aaa; margin-bottom:30px;">¿Quieres continuar?</p>
+            <h3 style="margin-bottom:5px; font-size: 22px;">Hola, <span id="welcomeName" style="color:#ff4b5c">User</span></h3>
+            <p style="font-size:14px; color:#aaa; margin-bottom:40px;">¿Regresas al chat?</p>
             <button id="btnContinue" class="btn-main">CONTINUAR</button>
-            <button id="btnSwitch" class="btn-main btn-sec">USAR OTRA CUENTA</button>
+            <button id="btnSwitch" class="btn-main btn-sec">CAMBIAR CUENTA</button>
         </div>
 
         <!-- CHAT SCREEN -->
         <div id="chat-screen" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
             <header class="chat-header">
-                <span style="font-weight:600; font-size:14px;">Sala Principal</span>
+                <span style="font-weight:600; font-size:16px;">Sala Principal</span>
                 <div class="header-controls">
                     <button id="btnClearAll" class="icon-btn" title="Borrar Chat">🗑️</button>
                     <button id="btnLogout" class="icon-btn" title="Salir">🚪</button>
@@ -211,7 +221,7 @@
             <div class="chat-input-area">
                 <button id="btnEmojiToggle" class="tool-btn">😀</button>
                 <button id="btnImgUpload" class="tool-btn">📷</button>
-                <button id="btnOpenDraw" class="tool-btn">🖌️</button> <!-- NUEVO BOTON PINCEL -->
+                <button id="btnOpenDraw" class="tool-btn">🖌️</button>
                 
                 <input type="file" id="chatFileInput" accept="image/*" style="display:none">
                 <input type="text" id="messageInput" placeholder="Mensaje..." autocomplete="off">
@@ -219,16 +229,16 @@
             </div>
         </div>
 
-        <!-- NUEVO: PANTALLA DE DIBUJO (MODAL) -->
+        <!-- PANTALLA DE DIBUJO (MODAL) -->
         <div id="drawing-modal" class="drawing-modal hidden">
-            <h3 style="color:white; text-align:center; font-size:14px; margin-top:10px;">Dibuja algo</h3>
+            <h3 style="color:white; text-align:center; font-size:14px; margin-top:5px; margin-bottom: 5px;">Lienzo</h3>
             
             <div class="canvas-container" id="canvasContainer">
                 <canvas id="drawCanvas"></canvas>
             </div>
             
             <div class="draw-controls">
-                <button id="btnCancelDraw" class="btn-draw-action btn-cancel">Cancelar</button>
+                <button id="btnCancelDraw" class="btn-draw-action btn-cancel">Cerrar</button>
                 <button id="btnClearDraw" class="btn-draw-action btn-clear">Limpiar</button>
                 <button id="btnSendDraw" class="btn-draw-action btn-send-draw">Enviar</button>
             </div>
@@ -238,7 +248,7 @@
 
     <script>
         // ==========================================
-        // 1. FIREBASE CONFIG (¡PONER TUS DATOS!)
+        // 1. FIREBASE CONFIG (¡PONER TUS DATOS AQUÍ!)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
@@ -262,7 +272,7 @@
             login: document.getElementById('login-screen'),
             welcome: document.getElementById('welcome-screen'),
             chat: document.getElementById('chat-screen'),
-            draw: document.getElementById('drawing-modal') // Nuevo Modal
+            draw: document.getElementById('drawing-modal')
         };
         const inputs = {
             user: document.getElementById('usernameInput'),
@@ -272,7 +282,7 @@
         };
         const emojiPicker = document.getElementById('emojiPicker');
 
-        // --- GESTIÓN DE SESIÓN ---
+        // --- SESIÓN ---
         window.onload = () => {
             const savedUser = localStorage.getItem('chat_user');
             const savedAvatar = localStorage.getItem('chat_avatar');
@@ -297,7 +307,7 @@
         // --- LOGIN ---
         document.getElementById('btnLogin').addEventListener('click', () => {
             const name = inputs.user.value.trim();
-            if(!name) return alert("Falta nombre");
+            if(!name) return alert("Escribe un nombre");
             currentUser = name;
             localStorage.setItem('chat_user', currentUser);
             localStorage.setItem('chat_avatar', currentAvatar);
@@ -312,7 +322,7 @@
             loadMessages();
         }
 
-        // --- IMÁGENES ---
+        // --- IMÁGENES (Compresión Optimizada) ---
         function compressImage(file, callback) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -320,7 +330,7 @@
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    const MAX = 400; 
+                    const MAX = 500; // Calidad aceptable para móvil
                     let w = img.width, h = img.height;
                     if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
                     else { if(h > MAX) { w *= MAX/h; h = MAX; } }
@@ -347,77 +357,76 @@
             if(e.target.files[0]) compressImage(e.target.files[0], (b64) => sendMessage(null, b64));
         });
 
-        // --- EMOJIS ---
-        ["😀","😂","😍","😎","😭","😡","👍","👎","🎉","❤️","🔥","👻"].forEach(emo => {
+        // --- EMOJIS (Lista expandida) ---
+        ["😀","😂","😍","😎","😭","😡","👍","👎","🎉","❤️","🔥","👻","👽","💩","👋","👀"].forEach(emo => {
             const s = document.createElement('span'); s.textContent = emo; s.className = "emoji-btn";
-            s.onclick = () => { inputs.msg.value += emo; emojiPicker.classList.add('hidden'); };
+            s.onclick = () => { inputs.msg.value += emo; emojiPicker.classList.add('hidden'); inputs.msg.focus(); };
             emojiPicker.appendChild(s);
         });
-        document.getElementById('btnEmojiToggle').addEventListener('click', () => emojiPicker.classList.toggle('hidden'));
+        document.getElementById('btnEmojiToggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('hidden');
+        });
+        document.body.addEventListener('click', () => emojiPicker.classList.add('hidden')); // Cerrar al tocar fuera
 
         // ==========================================
-        // 3. LÓGICA DE DIBUJO (CANVAS) - NUEVO
+        // 3. CANVAS (DIBUJO RESPONSIVE)
         // ==========================================
         const canvas = document.getElementById('drawCanvas');
         const ctx = canvas.getContext('2d');
         let isDrawing = false;
         let lastX = 0, lastY = 0;
 
-        // Abrir Modal
+        // Resize Canvas dinámico
+        function resizeCanvas() {
+            const container = document.getElementById('canvasContainer');
+            if(container.offsetWidth > 0) {
+                // Guardar contenido actual si fuera necesario (aquí se limpia al redimensionar por simplicidad)
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+                ctx.fillStyle = "white";
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+                ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = '#000000';
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
         document.getElementById('btnOpenDraw').addEventListener('click', () => {
             screens.draw.classList.remove('hidden');
-            // Ajustar tamaño del canvas al contenedor visible
-            const container = document.getElementById('canvasContainer');
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
-            
-            // Configurar Pincel
-            ctx.fillStyle = "white";
-            ctx.fillRect(0,0, canvas.width, canvas.height); // Fondo blanco
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#000000'; // Color lápiz
+            setTimeout(resizeCanvas, 100); // Pequeño delay para asegurar que el container renderizó
         });
 
-        // Cerrar Modal
         document.getElementById('btnCancelDraw').addEventListener('click', () => screens.draw.classList.add('hidden'));
-        
-        // Limpiar
         document.getElementById('btnClearDraw').addEventListener('click', () => {
-            ctx.fillStyle = "white";
-            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = "white"; ctx.fillRect(0,0, canvas.width, canvas.height);
         });
-
-        // Enviar Dibujo
         document.getElementById('btnSendDraw').addEventListener('click', () => {
             const drawingUrl = canvas.toDataURL('image/png');
             sendMessage(null, drawingUrl);
             screens.draw.classList.add('hidden');
         });
 
-        // Eventos Mouse
-        function draw(e) {
-            if (!isDrawing) return;
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(e.offsetX, e.offsetY);
-            ctx.stroke();
-            [lastX, lastY] = [e.offsetX, e.offsetY];
-        }
-        canvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', () => isDrawing = false);
-        canvas.addEventListener('mouseout', () => isDrawing = false);
-
         // Eventos Touch (Móvil)
         function getTouchPos(canvasDom, touchEvent) {
             var rect = canvasDom.getBoundingClientRect();
+            // Soporte multitouch básico (toma el primer dedo)
             return {
                 x: touchEvent.touches[0].clientX - rect.left,
                 y: touchEvent.touches[0].clientY - rect.top
             };
         }
+
+        // Mouse Events (PC)
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; [lastX, lastY] = [e.offsetX, e.offsetY]; });
+        canvas.addEventListener('mousemove', (e) => {
+            if(!isDrawing) return;
+            ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+
+        // Touch Events (Mobile) - IMPORTANTE: passive: false para prevenir scroll
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault(); isDrawing = true;
             const pos = getTouchPos(canvas, e);
@@ -431,14 +440,22 @@
             [lastX, lastY] = [pos.x, pos.y];
         }, {passive: false});
         
-        canvas.addEventListener('touchend', () => isDrawing = false);
+        canvas.addEventListener('touchend', (e) => { e.preventDefault(); isDrawing = false; });
 
         // ==========================================
-        // 4. CHAT CORE
+        // 4. CHAT SYSTEM
         // ==========================================
         document.getElementById('btnSend').addEventListener('click', () => {
             const txt = inputs.msg.value.trim();
             if(txt) sendMessage(txt, null);
+        });
+        
+        // Enviar con Enter
+        inputs.msg.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const txt = inputs.msg.value.trim();
+                if(txt) sendMessage(txt, null);
+            }
         });
 
         function sendMessage(text, imgBase64) {
@@ -468,20 +485,21 @@
                         ${!isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
                         <div class="bubble">
                             ${isMe ? `<div class="delete-btn" onclick="deleteMsg('${doc.id}')">✕</div>` : ''}
-                            ${!isMe ? `<small style="opacity:0.6; font-size:10px; display:block">${data.user}</small>` : ''}
+                            ${!isMe ? `<small style="opacity:0.6; font-size:10px; display:block; margin-bottom:2px;">${data.user}</small>` : ''}
                             ${content}
                         </div>
                         ${isMe ? `<img src="${data.avatar}" class="msg-avatar">` : ''}
                     `;
                     list.appendChild(row);
                 });
+                // Scroll al fondo suavemente
                 list.scrollTop = list.scrollHeight;
             });
         }
 
-        window.deleteMsg = (id) => { if(confirm("¿Borrar?")) db.collection("messages").doc(id).delete(); };
+        window.deleteMsg = (id) => { if(confirm("¿Borrar mensaje?")) db.collection("messages").doc(id).delete(); };
         document.getElementById('btnClearAll').addEventListener('click', async () => {
-            if(confirm("⚠ ¿Borrar TODO el chat para TODOS?")) {
+            if(confirm("⚠ ¿BORRAR TODO EL HISTORIAL PARA TODOS?")) {
                 const snap = await db.collection("messages").get();
                 snap.forEach(doc => doc.ref.delete());
             }
