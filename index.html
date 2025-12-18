@@ -2,265 +2,171 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <!-- META VIEWPORT OPTIMIZADO: "interactive-widget=resizes-content" es la clave para que el teclado no rompa el chat -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <!-- Meta viewport mejorado para evitar zoom y manejar el teclado -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Red Mesh Chat - Secure</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
-        /* --- 1. ESTRUCTURA INAMOVIBLE (LAYOUT) --- */
+        /* --- 1. ESTRUCTURA ANTI-MOVIMIENTO --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        body {
-            /* Ocupar exactamente la pantalla visible, ni un pixel más */
-            height: 100vh; 
-            height: 100dvh; /* Altura dinámica para móviles modernos */
+        html, body {
+            /* Evita que el cuerpo se mueva o haga scroll */
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
             background-color: #050505;
+        }
+
+        body {
             background-image: 
                 radial-gradient(at 0% 0%, hsla(350,90%,30%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 0%, hsla(0,0%,15%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 100%, hsla(350,90%,20%,1) 0, transparent 50%), 
                 radial-gradient(at 0% 100%, hsla(0,0%,10%,1) 0, transparent 50%);
-            display: flex; justify-content: center; align-items: center;
-            overflow: hidden; /* Prohibido el scroll en el body */
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
 
-        /* Contenedor Principal */
+        /* Contenedor Principal Ajustable */
         .app-container {
-            width: 100%; max-width: 450px; 
-            height: 100%; /* Full height en móvil */
+            width: 100%; 
+            max-width: 450px; 
+            height: 100%; /* Se ajustará por JS en móviles */
             background: rgba(20, 20, 25, 0.95); 
-            display: flex; flex-direction: column; /* Columna Flex es vital para el teclado */
+            display: flex; 
+            flex-direction: column;
             position: relative;
             overflow: hidden;
         }
 
-        /* En escritorio le damos borde y margen */
         @media (min-width: 451px) {
             .app-container {
-                height: 90vh; border-radius: 30px;
+                height: 90vh; 
+                border-radius: 30px;
                 border: 1px solid rgba(255,255,255,0.1);
                 box-shadow: 0 30px 60px rgba(0,0,0,0.8);
             }
         }
 
-        /* --- 2. PANTALLAS (LOGIN / REGISTRO) --- */
+        /* --- 2. PANTALLAS --- */
         .screen {
             position: absolute; width: 100%; height: 100%;
-            background: #121212; z-index: 50; padding: 30px;
+            background: #121212; z-index: 50; padding: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: transform 0.4s ease;
         }
-        
-        .avatar-preview {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: #252525; border: 2px dashed #ff4b5c; margin-bottom: 20px;
-            display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;
-        }
-        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-
-        .input-group { width: 100%; margin-bottom: 15px; text-align: left; }
-        .label-text { font-size: 12px; color: #888; margin-left: 5px; margin-bottom: 5px; display: block; }
         
         .input-dark {
             width: 100%; padding: 14px; border-radius: 12px;
             border: 1px solid #333; background: #1e1e1e;
-            color: white; outline: none; font-size: 16px;
+            color: white; outline: none; 
+            font-size: 16px; /* Mínimo 16px para evitar zoom en iOS */
         }
-        .input-dark:focus { border-color: #ff4b5c; }
 
-        .btn-main {
-            width: 100%; padding: 15px; border-radius: 12px; border: none;
-            background: linear-gradient(135deg, #ff4b5c, #d63031);
-            color: white; font-weight: 600; cursor: pointer; font-size: 16px; margin-top: 10px;
-        }
-        .btn-link {
-            background: none; border: none; color: #ff4b5c; text-decoration: underline;
-            cursor: pointer; margin-top: 15px; font-size: 13px;
-        }
-        .error-msg { color: #ff4757; font-size: 12px; margin-top: 10px; height: 15px; }
-
-        /* --- 3. CHAT UI (Flexible) --- */
-        
-        /* Cabecera FIJA */
+        /* --- 3. CHAT UI --- */
         .chat-header {
-            flex-shrink: 0; /* No se encoge nunca */
+            flex-shrink: 0;
             height: 60px; padding: 0 15px;
-            background: rgba(25, 25, 30, 0.98);
+            background: #19191e;
             border-bottom: 1px solid #333;
             display: flex; align-items: center; justify-content: space-between;
+            z-index: 10;
         }
 
-        /* Lista de Mensajes (SCROLLABLE) */
         #messages-list {
-            flex-grow: 1; /* Ocupa todo el espacio disponible */
-            overflow-y: auto; /* Solo esto hace scroll */
-            padding: 15px; display: flex; flex-direction: column; gap: 15px;
-            scroll-behavior: smooth;
+            flex: 1; /* Ocupa el espacio restante */
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: transparent;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* Barra de Input FIJA abajo */
         .chat-input-area {
-            flex-shrink: 0; /* No se encoge */
-            padding: 10px; background: rgba(25, 25, 30, 0.98); border-top: 1px solid #333;
-            display: flex; gap: 8px; align-items: center;
-            /* Soporte para iPhone X/11/12/etc home bar */
+            flex-shrink: 0;
+            padding: 10px;
+            background: #19191e;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 8px;
+            align-items: center;
             padding-bottom: max(10px, env(safe-area-inset-bottom));
         }
 
-        /* Estilos de Mensajes */
-        .msg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 85%; }
-        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
-        
-        .bubble {
-            padding: 10px 14px; border-radius: 18px; font-size: 14px;
-            line-height: 1.4; position: relative; word-wrap: break-word; color: #eee;
-        }
+        /* --- ESTILOS DE BURBUJAS --- */
+        .msg-row { display: flex; gap: 8px; align-items: flex-end; max-width: 85%; margin-bottom: 4px; }
+        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; }
         .sent { flex-direction: row-reverse; align-self: flex-end; }
-        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #e84118); color: white; border-bottom-right-radius: 2px; }
+        .sent .bubble { background: linear-gradient(135deg, #ff4b5c, #d63031); color: white; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; }
-        .received .bubble { background: #2d3436; border-bottom-left-radius: 2px; }
+        .received .bubble { background: #2d3436; color: #eee; border-bottom-left-radius: 2px; }
+        .msg-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
         
-        .chat-image { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
-        
-        .delete-btn {
-            position: absolute; top: -10px; left: -10px; width: 22px; height: 22px;
-            background: white; color: red; border-radius: 50%; border: 1px solid #ccc;
-            display: none; justify-content: center; align-items: center; cursor: pointer; z-index: 10;
-        }
-        .sent:hover .delete-btn { display: flex; }
-
-        /* Inputs y Botones Chat */
+        /* Botones e Inputs del Chat */
         .chat-input-area input {
             flex: 1; padding: 12px 15px; border-radius: 25px; border: none;
             background: #333; color: white; outline: none; font-size: 16px;
         }
-        .icon-btn { font-size: 22px; background: none; border: none; color: #aaa; cursor: pointer; padding: 5px; }
-        .send-btn {
-            width: 45px; height: 45px; border-radius: 50%; background: #ff4b5c; color: white;
-            border: none; font-size: 18px; flex-shrink: 0; display:flex; align-items:center; justify-content:center;
-        }
-
-        /* --- 4. EXTRAS (Emoji & Draw) --- */
-        .emoji-picker {
-            position: absolute; bottom: 70px; left: 0; width: 100%;
-            background: #252525; padding: 10px; border-top: 1px solid #444;
-            display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; z-index: 20;
-        }
-        .emoji-btn { font-size: 24px; text-align: center; padding: 5px; cursor: pointer; }
-
-        /* Modal Dibujo */
-        .drawing-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #121212; z-index: 100; display: flex; flex-direction: column; padding: 10px;
-        }
-        .canvas-box { flex: 1; background: white; border-radius: 15px; margin: 10px 0; overflow: hidden; touch-action: none; }
-        canvas { width: 100%; height: 100%; display: block; }
-        .draw-footer { display: flex; gap: 10px; height: 50px; }
-        .draw-btn { flex: 1; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .icon-btn { font-size: 20px; background: none; border: none; color: #aaa; cursor: pointer; }
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: #ff4b5c; color: white; border: none; display:flex; align-items:center; justify-content:center; }
 
         .hidden { display: none !important; }
+
+        /* Canvas Modal */
+        .drawing-modal { position: absolute; top:0; left:0; width:100%; height:100%; background:#121212; z-index:100; display:flex; flex-direction:column; padding:10px; }
+        .canvas-box { flex:1; background:white; border-radius:15px; touch-action:none; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container" id="main-app">
         
-        <!-- PANTALLA 1: FORMULARIO AUTH (LOGIN / REGISTER) -->
+        <!-- PANTALLA AUTH -->
         <div id="auth-screen" class="screen">
             <h2 style="color:#ff4b5c; margin-bottom: 20px;">RED CHAT ID</h2>
-            
-            <!-- Vista Registro (Por defecto) -->
             <div id="register-view" style="width: 100%; text-align: center;">
-                <label for="reg-avatar-input" class="avatar-preview">
-                    <img id="reg-avatar-img" style="display:none">
-                    <span id="reg-avatar-icon" style="font-size:30px; opacity:0.5;">📷</span>
-                </label>
-                <input type="file" id="reg-avatar-input" style="display:none" accept="image/*">
-
-                <div class="input-group">
-                    <span class="label-text">Elige tu Usuario</span>
-                    <input type="text" id="reg-user" class="input-dark" placeholder="Ej: Dragon123">
-                </div>
-                <div class="input-group">
-                    <span class="label-text">Crea una Contraseña</span>
-                    <input type="password" id="reg-pass" class="input-dark" placeholder="******">
-                </div>
-                <button id="btn-do-register" class="btn-main">CREAR CUENTA</button>
-                <button class="btn-link" onclick="toggleAuth('login')">¿Ya tienes cuenta? Inicia sesión</button>
+                <input type="text" id="reg-user" class="input-dark" placeholder="Usuario" style="margin-bottom:10px;">
+                <input type="password" id="reg-pass" class="input-dark" placeholder="Contraseña">
+                <button id="btn-do-register" class="send-btn" style="width:100%; border-radius:12px; margin-top:15px; height:50px;">CREAR CUENTA</button>
+                <button class="icon-btn" style="font-size:13px; margin-top:10px;" onclick="toggleAuth('login')">¿Ya tienes cuenta? Login</button>
             </div>
 
-            <!-- Vista Login (Oculta) -->
-            <div id="login-view" style="width: 100%; text-align: center;" class="hidden">
-                <div style="margin-bottom: 30px; font-size: 50px;">🔒</div>
-                <div class="input-group">
-                    <span class="label-text">Tu Usuario</span>
-                    <input type="text" id="login-user" class="input-dark" placeholder="Usuario">
-                </div>
-                <div class="input-group">
-                    <span class="label-text">Tu Contraseña</span>
-                    <input type="password" id="login-pass" class="input-dark" placeholder="Contraseña">
-                </div>
-                <button id="btn-do-login" class="btn-main">ENTRAR</button>
-                <button class="btn-link" onclick="toggleAuth('register')">¿Eres nuevo? Regístrate aquí</button>
+            <div id="login-view" class="hidden" style="width: 100%; text-align: center;">
+                <input type="text" id="login-user" class="input-dark" placeholder="Usuario" style="margin-bottom:10px;">
+                <input type="password" id="login-pass" class="input-dark" placeholder="Contraseña">
+                <button id="btn-do-login" class="send-btn" style="width:100%; border-radius:12px; margin-top:15px; height:50px;">ENTRAR</button>
+                <button class="icon-btn" style="font-size:13px; margin-top:10px;" onclick="toggleAuth('register')">¿Eres nuevo? Registro</button>
             </div>
-
-            <div id="auth-error" class="error-msg"></div>
         </div>
 
-        <!-- PANTALLA 2: CHAT PRINCIPAL -->
-        <div id="chat-screen" class="hidden" style="display: flex; flex-direction: column; height: 100%;">
-            <!-- Header Fijo -->
+        <!-- CHAT -->
+        <div id="chat-screen" class="hidden" style="flex:1; display: flex; flex-direction: column;">
             <header class="chat-header">
-                <span style="font-weight:600; color:white;">Sala Global</span>
-                <div style="display: flex; gap: 15px; align-items: center;">
-                    <button onclick="clearChat()" class="icon-btn" style="font-size:18px;">🗑️</button>
-                    <button onclick="logout()" class="icon-btn" style="font-size:18px; color:#ff4b5c;">🚪</button>
-                    <img id="my-avatar-display" class="msg-avatar" style="border: 1px solid #ff4b5c;">
-                </div>
+                <span style="font-weight:600; color:white;">Mesh Chat</span>
+                <button onclick="logout()" class="icon-btn">🚪</button>
             </header>
 
-            <!-- Lista Mensajes (Scroll) -->
             <div id="messages-list"></div>
 
-            <!-- Panel Emojis -->
-            <div id="emoji-picker" class="emoji-picker hidden"></div>
-
-            <!-- Input Fijo -->
             <div class="chat-input-area">
-                <button onclick="toggleEmoji()" class="icon-btn">😀</button>
                 <button onclick="document.getElementById('img-input').click()" class="icon-btn">📷</button>
-                <button onclick="openDraw()" class="icon-btn">🖌️</button>
-                
                 <input type="file" id="img-input" style="display:none" accept="image/*">
-                <input type="text" id="msg-input" placeholder="Escribe..." autocomplete="off">
+                <input type="text" id="msg-input" placeholder="Escribe algo..." autocomplete="off">
                 <button onclick="sendMsg()" class="send-btn">➤</button>
             </div>
         </div>
-
-        <!-- PANTALLA 3: DIBUJO -->
-        <div id="draw-screen" class="drawing-modal hidden">
-            <h3 style="color:white; text-align:center;">Lienzo</h3>
-            <div class="canvas-box" id="canvas-box">
-                <canvas id="canvas"></canvas>
-            </div>
-            <div class="draw-footer">
-                <button onclick="closeDraw()" class="draw-btn" style="background:#333; color:white;">Cancelar</button>
-                <button onclick="clearCanvas()" class="draw-btn" style="background:#ffa502; color:white;">Limpiar</button>
-                <button onclick="sendDraw()" class="draw-btn" style="background:#ff4b5c; color:white;">Enviar</button>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // ==========================================
-        // 1. PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE
-        // ==========================================
+        // --- CONFIGURACIÓN FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyDD4ZgShyZGEnTYbGwNprjHwLxSVOnHBGI",
             authDomain: "ja-chat-59c9e.firebaseapp.com",
@@ -269,259 +175,91 @@
             messagingSenderId: "967850675224",
             appId: "1:967850675224:web:809c09d0a3aa117696076d"
         };
-
-        // Inicializar Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        } else {
-            firebase.app(); 
-        }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Variables
-        let currentUser = null; 
-        const authScreen = document.getElementById('auth-screen');
-        const chatScreen = document.getElementById('chat-screen');
-        const errorMsg = document.getElementById('auth-error');
-        const msgList = document.getElementById('messages-list');
-        const msgInput = document.getElementById('msg-input');
-
-        // ==========================================
-        // FUNCIONES DE REGISTRO Y LOGIN (MEJORADAS)
-        // ==========================================
-
-        // REGISTRAR USUARIO
-        document.getElementById('btn-do-register').addEventListener('click', async () => {
-            const user = document.getElementById('reg-user').value.trim().toLowerCase();
-            const pass = document.getElementById('reg-pass').value.trim();
-            const avatarSrc = document.getElementById('reg-avatar-img').src;
-            
-            if(!user || !pass) return alert("¡Error! Escribe un usuario y contraseña.");
-            
-            try {
-                // Verificar si existe
-                const docRef = db.collection("users").doc(user);
-                const docSnap = await docRef.get();
-                
-                if (docSnap.exists) {
-                    return alert("¡Ese usuario YA EXISTE! Intenta con otro o inicia sesión.");
-                }
-
-                // Definir Avatar
-                const avatarToSave = (document.getElementById('reg-avatar-img').style.display !== 'none') 
-                                     ? avatarSrc 
-                                     : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
-
-                // Crear usuario en base de datos
-                await db.collection("users").doc(user).set({
-                    password: pass,
-                    avatar: avatarToSave,
-                    originalName: document.getElementById('reg-user').value
-                });
-
-                alert("¡Cuenta creada con éxito!");
-                loginSuccess(document.getElementById('reg-user').value, avatarToSave);
-
-            } catch (error) {
-                console.error(error);
-                alert("ERROR DE FIREBASE:\n" + error.message + "\n\n(Revisa que tu Base de Datos esté en MODO DE PRUEBA)");
-            }
-        });
-
-        // INICIAR SESIÓN
-        document.getElementById('btn-do-login').addEventListener('click', async () => {
-            const user = document.getElementById('login-user').value.trim().toLowerCase();
-            const pass = document.getElementById('login-pass').value.trim();
-
-            if(!user || !pass) return alert("Completa los campos.");
-
-            try {
-                const docRef = db.collection("users").doc(user);
-                const docSnap = await docRef.get();
-
-                if (!docSnap.exists) {
-                    return alert("Usuario NO encontrado. Regístrate primero.");
-                }
-
-                const data = docSnap.data();
-                if (data.password === pass) {
-                    loginSuccess(data.originalName, data.avatar);
-                } else {
-                    alert("Contraseña INCORRECTA.");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Error al conectar: " + error.message);
-            }
-        });
-
-        // AL ENTRAR CORRECTAMENTE
-        function loginSuccess(name, avatar) {
-            currentUser = { name: name, avatar: avatar };
-            localStorage.setItem('redchat_user', name);
-            localStorage.setItem('redchat_avatar', avatar);
-            
-            document.getElementById('my-avatar-display').src = avatar;
-            authScreen.classList.add('hidden');
-            chatScreen.classList.remove('hidden');
-            loadMessages();
+        // --- SOLUCIÓN TECLADO MÓVIL (Visual Viewport) ---
+        // Esto detecta exactamente cuánto mide la pantalla libre de teclado
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const viewHeight = window.visualViewport.height;
+                document.getElementById('main-app').style.height = viewHeight + 'px';
+                // Hacer scroll al final cuando se abre el teclado
+                setTimeout(() => {
+                    const list = document.getElementById('messages-list');
+                    list.scrollTop = list.scrollHeight;
+                }, 100);
+            });
         }
 
-        // CERRAR SESIÓN
-        window.logout = function() {
-            localStorage.clear();
-            location.reload();
+        // --- LÓGICA DE USUARIOS ---
+        let currentUser = null;
+
+        function toggleAuth(view) {
+            document.getElementById('register-view').classList.toggle('hidden', view === 'login');
+            document.getElementById('login-view').classList.toggle('hidden', view === 'register');
         }
 
-        // AUTO-LOGIN AL RECARGAR
-        window.onload = () => {
-            const u = localStorage.getItem('redchat_user');
-            const a = localStorage.getItem('redchat_avatar');
-            if(u && a) loginSuccess(u, a);
-        };
+        async function register() {
+            const u = document.getElementById('reg-user').value.trim();
+            const p = document.getElementById('reg-pass').value.trim();
+            if(!u || !p) return alert("Llena los datos");
+            await db.collection("users").doc(u.toLowerCase()).set({ name: u, pass: p });
+            login(u, p);
+        }
 
-        // ==========================================
-        // LÓGICA DEL CHAT
-        // ==========================================
-        function sendMsg(img = null) {
-            const txt = msgInput.value.trim();
-            if (!txt && !img) return;
+        async function login(user, pass) {
+            const u = user || document.getElementById('login-user').value.trim();
+            const p = pass || document.getElementById('login-pass').value.trim();
+            const doc = await db.collection("users").doc(u.toLowerCase()).get();
+            if(doc.exists && doc.data().pass === p) {
+                currentUser = u;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('chat-screen').classList.remove('hidden');
+                loadMessages();
+            } else { alert("Error de acceso"); }
+        }
 
+        function logout() { location.reload(); }
+
+        document.getElementById('btn-do-register').onclick = () => register();
+        document.getElementById('btn-do-login').onclick = () => login();
+
+        // --- LÓGICA CHAT ---
+        function sendMsg() {
+            const input = document.getElementById('msg-input');
+            const txt = input.value.trim();
+            if(!txt) return;
             db.collection("messages").add({
-                user: currentUser.name,
-                avatar: currentUser.avatar,
+                user: currentUser,
                 text: txt,
-                image: img,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(e => console.error("Error enviando mensaje", e));
-
-            msgInput.value = "";
-            document.getElementById('emoji-picker').classList.add('hidden');
+            });
+            input.value = "";
         }
-        
-        msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMsg(); });
 
         function loadMessages() {
             db.collection("messages").orderBy("timestamp", "asc").onSnapshot(snap => {
-                msgList.innerHTML = "";
+                const list = document.getElementById('messages-list');
+                list.innerHTML = "";
                 snap.forEach(doc => {
                     const d = doc.data();
-                    const isMe = d.user === currentUser.name;
-                    
-                    const row = document.createElement('div');
-                    row.className = `msg-row ${isMe ? 'sent' : 'received'}`;
-                    
-                    let content = "";
-                    if(d.image) content += `<img src="${d.image}" class="chat-image">`;
-                    if(d.text) content += `<div>${d.text}</div>`;
-
-                    row.innerHTML = `
-                        ${!isMe ? `<img src="${d.avatar}" class="msg-avatar">` : ''}
+                    const isMe = d.user === currentUser;
+                    const div = document.createElement('div');
+                    div.className = `msg-row ${isMe ? 'sent' : 'received'}`;
+                    div.innerHTML = `
                         <div class="bubble">
-                            ${isMe ? `<div class="delete-btn" onclick="delMsg('${doc.id}')">✕</div>` : ''}
-                            ${!isMe ? `<small style="font-size:10px; color:#aaa; display:block;">${d.user}</small>` : ''}
-                            ${content}
+                            <small style="display:block; font-size:9px; opacity:0.7">${d.user}</small>
+                            ${d.text}
                         </div>
                     `;
-                    msgList.appendChild(row);
+                    list.appendChild(div);
                 });
-                msgList.scrollTop = msgList.scrollHeight;
+                list.scrollTop = list.scrollHeight;
             });
         }
 
-        window.delMsg = (id) => { if(confirm("¿Borrar mensaje?")) db.collection("messages").doc(id).delete(); };
-        window.clearChat = async () => {
-            if(confirm("⚠ ¿BORRAR TODO EL CHAT?")) {
-                const q = await db.collection("messages").get();
-                q.forEach(d => d.ref.delete());
-            }
-        };
-
-        // ==========================================
-        // EXTRAS (IMAGENES, EMOJIS, DIBUJO)
-        // ==========================================
-        
-        // Comprimir Imagen
-        function compress(file, cb) {
-            if(!file) return;
-            const r = new FileReader();
-            r.onload = (e) => {
-                const i = new Image();
-                i.onload = () => {
-                    const c = document.createElement('canvas');
-                    const x = c.getContext('2d');
-                    const MAX = 400; let w=i.width, h=i.height;
-                    if(w>h){if(w>MAX){h*=MAX/w;w=MAX}}else{if(h>MAX){w*=MAX/h;h=MAX}}
-                    c.width=w; c.height=h; x.drawImage(i,0,0,w,h);
-                    cb(c.toDataURL('image/jpeg', 0.8));
-                };
-                i.src = e.target.result;
-            };
-            r.readAsDataURL(file);
-        }
-
-        // Listeners Imagen
-        document.getElementById('reg-avatar-input').addEventListener('change', function() {
-            compress(this.files[0], (b64) => {
-                const img = document.getElementById('reg-avatar-img');
-                img.src = b64; img.style.display = 'block';
-                document.getElementById('reg-avatar-icon').style.display = 'none';
-            });
-        });
-        document.getElementById('img-input').addEventListener('change', function() {
-            compress(this.files[0], (b64) => sendMsg(b64));
-        });
-
-        // UI Helpers
-        window.toggleAuth = (view) => {
-            document.getElementById('auth-error').innerText = "";
-            if(view === 'login') {
-                document.getElementById('register-view').classList.add('hidden');
-                document.getElementById('login-view').classList.remove('hidden');
-            } else {
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('register-view').classList.remove('hidden');
-            }
-        };
-
-        // Emojis
-        const em = ["😀","😂","😍","😎","😭","😡","👍","👎","🔥","❤️","🎉","💩","👻","👀","👋","💀"];
-        const ep = document.getElementById('emoji-picker');
-        em.forEach(e => {
-            const b = document.createElement('div'); b.className='emoji-btn'; b.innerText=e;
-            b.onclick = () => { msgInput.value += e; ep.classList.add('hidden'); msgInput.focus(); };
-            ep.appendChild(b);
-        });
-        window.toggleEmoji = () => ep.classList.toggle('hidden');
-
-        // Canvas
-        const cvs = document.getElementById('canvas');
-        const ctx = cvs.getContext('2d');
-        let isD = false;
-        function resizeCvs() {
-            const b = document.getElementById('canvas-box');
-            cvs.width = b.offsetWidth; cvs.height = b.offsetHeight;
-            ctx.fillStyle='white'; ctx.fillRect(0,0,cvs.width,cvs.height);
-            ctx.lineJoin='round'; ctx.lineCap='round'; ctx.lineWidth=4;
-        }
-        window.openDraw = () => { document.getElementById('draw-screen').classList.remove('hidden'); resizeCvs(); };
-        window.closeDraw = () => document.getElementById('draw-screen').classList.add('hidden');
-        window.clearCanvas = () => { ctx.fillRect(0,0,cvs.width,cvs.height); };
-        window.sendDraw = () => { sendMsg(cvs.toDataURL()); closeDraw(); };
-        
-        function getPos(e) {
-            const r = cvs.getBoundingClientRect();
-            const t = e.touches ? e.touches[0] : e;
-            return { x: t.clientX - r.left, y: t.clientY - r.top };
-        }
-        ['mousedown','touchstart'].forEach(ev => cvs.addEventListener(ev, (e)=>{ 
-            isD=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault();
-        }, {passive:false}));
-        ['mousemove','touchmove'].forEach(ev => cvs.addEventListener(ev, (e)=>{ 
-            if(!isD)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault();
-        }, {passive:false}));
-        ['mouseup','touchend'].forEach(ev => cvs.addEventListener(ev, ()=>isD=false));
-
+        document.getElementById('msg-input').onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
     </script>
 </body>
 </html>
